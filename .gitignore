@@ -1,5 +1,6 @@
 # Configuration files with secrets
 config.py
+config.yaml
 *.json
 
 # Service Account Keys
