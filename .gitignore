@@ -71,3 +71,11 @@ tmp/
 BI_*
 *beyond-identity*
 *byndid*
+
+# Compiled binaries
+scim-sync
+scim-sync-*
+*.exe
+
+# Scripts
+start-server.sh
