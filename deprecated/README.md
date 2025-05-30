@@ -80,13 +80,14 @@ The Go implementation provides:
 | `GOOGLE_DOMAIN` | `google_workspace.domain` |
 | `SUPER_ADMIN_EMAIL` | `google_workspace.super_admin_email` |
 | `SERVICE_ACCOUNT_FILE` | `google_workspace.service_account_key_path` |
-| `BI_API_TOKEN` | `beyond_identity.api_token` |
+| `BI_API_TOKEN` (env var) | `beyond_identity.api_token` (config file) |
 | `GROUPS_TO_SYNC` | `sync.groups` |
 
-### Environment Variables
+### Configuration Changes
 
-Both versions support the same environment variables:
-- `BI_API_TOKEN` - Beyond Identity API token
+**Important**: The Go version uses configuration files instead of environment variables:
+- Python version used `BI_API_TOKEN` environment variable
+- Go version uses `beyond_identity.api_token` in the config file
 
 ## Support
 

@@ -16,12 +16,8 @@ This will guide you through:
 - Sync settings (groups to sync, retry configuration)
 - Server mode settings (port, scheduling)
 
-### 2. Set Environment Variables
-After the wizard, set your API token:
-
-```bash
-export BI_API_TOKEN="your-beyond-identity-api-token"
-```
+### 2. Configure API Token
+After the wizard, ensure your API token is configured in the `config.yaml` file under `beyond_identity.api_token`.
 
 ### 3. Validate Setup
 Test your configuration:
@@ -62,7 +58,7 @@ google_workspace:
 
 # Beyond Identity configuration  
 beyond_identity:
-  api_token: "${BI_API_TOKEN}"
+  api_token: "your-beyond-identity-api-token"
   scim_base_url: "https://api.byndid.com/scim/v2"
   native_api_url: "https://api.byndid.com/v2"
   group_prefix: "GoogleSCIM_"

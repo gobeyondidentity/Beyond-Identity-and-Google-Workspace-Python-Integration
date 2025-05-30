@@ -23,13 +23,13 @@
 
 ### Authentication Issues
 
-#### "BI_API_TOKEN environment variable not set"
+#### "API token not configured"
 **Symptoms:** Error when trying to connect to Beyond Identity API.
 
 **Solutions:**
-1. Set the environment variable: `export BI_API_TOKEN="your-token"`
-2. Add to your shell profile (`~/.bashrc`, `~/.zshrc`) for persistence
-3. Verify the token is valid and has SCIM permissions
+1. Configure the API token in your `config.yaml` file under `beyond_identity.api_token`
+2. Verify the token is valid and has SCIM permissions
+3. Run setup validation to test connectivity
 
 #### "Authentication failed" with Beyond Identity
 **Symptoms:** 401 Unauthorized errors when accessing Beyond Identity API.

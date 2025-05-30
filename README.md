@@ -40,9 +40,6 @@ go build -o scim-sync ./cmd
 # Create configuration from example
 cp configs/config.example.yaml config.yaml
 
-# Set your API token
-export BI_API_TOKEN="your-beyond-identity-api-token"
-
 # Edit config.yaml with your values, then validate
 ./scim-sync validate-config
 
@@ -85,16 +82,16 @@ google_workspace:
   service_account_key_path: "./service-account.json"
 
 beyond_identity:
-  api_token: "${BI_API_TOKEN}"
+  api_token: "your-beyond-identity-api-token"
 
 sync:
   groups:
     - "group1@your-domain.com"
 ```
 
-### Environment Variables
+### API Token Configuration
 
-- `BI_API_TOKEN` - Beyond Identity API token (required)
+The Beyond Identity API token should be configured in the `config.yaml` file under `beyond_identity.api_token`.
 
 ### Configuration File Locations
 

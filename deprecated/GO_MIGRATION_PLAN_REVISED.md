@@ -85,7 +85,7 @@ google_workspace:
 
 # Beyond Identity configuration
 beyond_identity:
-  api_token: "${BI_API_TOKEN}"  # Environment variable support
+  api_token: "your-beyond-identity-api-token"  # Configure directly in file
   scim_base_url: "https://api.byndid.com/scim/v2"
   native_api_url: "https://api.byndid.com/v2"
   group_prefix: "GoogleSCIM_"
