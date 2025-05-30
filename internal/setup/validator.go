@@ -131,10 +131,8 @@ func (v *Validator) validateEnvironment() *ValidationResult {
 	var issues []string
 	
 	// Check API token
-	if v.config.BeyondIdentity.APIToken == "${BI_API_TOKEN}" {
-		if token := os.Getenv("BI_API_TOKEN"); token == "" {
-			issues = append(issues, "BI_API_TOKEN environment variable not set")
-		}
+	if v.config.BeyondIdentity.APIToken == "" {
+		issues = append(issues, "Beyond Identity API token not set in config.yaml")
 	}
 	
 	// Check service account file
@@ -203,9 +201,6 @@ func (v *Validator) validateBeyondIdentity() *ValidationResult {
 	
 	// Get API token
 	apiToken := v.config.BeyondIdentity.APIToken
-	if apiToken == "${BI_API_TOKEN}" {
-		apiToken = os.Getenv("BI_API_TOKEN")
-	}
 	
 	if apiToken == "" {
 		fmt.Println("❌ FAIL")
@@ -213,7 +208,7 @@ func (v *Validator) validateBeyondIdentity() *ValidationResult {
 			Component: "Beyond Identity",
 			Status:    "FAIL",
 			Message:   "API token not available",
-			Details:   "BI_API_TOKEN environment variable not set",
+			Details:   "Beyond Identity API token not set in config.yaml",
 			Duration:  time.Since(start),
 		}
 	}

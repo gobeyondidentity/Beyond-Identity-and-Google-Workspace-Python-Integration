@@ -138,24 +138,10 @@ func (w *Wizard) configureBeyondIdentity() error {
 	// API token
 	fmt.Println("📝 API Token Setup:")
 	fmt.Println("You need a Beyond Identity API token with SCIM permissions.")
-	fmt.Println("The token will be read from the BI_API_TOKEN environment variable.")
 	
-	useEnvVar := w.promptYesNo("Use BI_API_TOKEN environment variable?", true)
-	if useEnvVar {
-		w.config.BeyondIdentity.APIToken = "${BI_API_TOKEN}"
-		fmt.Println("✅ Will use BI_API_TOKEN environment variable")
-		
-		// Check if it's currently set
-		if token := os.Getenv("BI_API_TOKEN"); token == "" {
-			fmt.Println("⚠️  BI_API_TOKEN is not currently set in your environment")
-			fmt.Println("Remember to set it before running: export BI_API_TOKEN=\"your-token\"")
-		} else {
-			fmt.Println("✅ BI_API_TOKEN is currently set")
-		}
-	} else {
-		token := w.promptRequired("Beyond Identity API token")
-		w.config.BeyondIdentity.APIToken = token
-	}
+	token := w.promptRequired("Beyond Identity API token")
+	w.config.BeyondIdentity.APIToken = token
+	fmt.Println("✅ API token configured")
 
 	// SCIM base URL
 	scimURL := w.promptWithDefault("SCIM API base URL", "https://api.byndid.com/scim/v2")
@@ -297,10 +283,9 @@ func (w *Wizard) showNextSteps(configPath string) {
 	fmt.Println("═════════════════")
 	fmt.Println()
 	fmt.Println("Next steps:")
-	fmt.Println("1. 📝 Set your API token: export BI_API_TOKEN=\"your-token\"")
-	fmt.Println("2. 🔍 Validate config:   ./go-scim-sync validate-config")
-	fmt.Println("3. 🚀 Test sync:         ./go-scim-sync run")
-	fmt.Println("4. 🌐 Start server:      ./go-scim-sync server")
+	fmt.Println("1. 🔍 Validate config:   ./go-scim-sync validate-config")
+	fmt.Println("2. 🚀 Test sync:         ./go-scim-sync run")
+	fmt.Println("3. 🌐 Start server:      ./go-scim-sync server")
 	fmt.Println()
 	fmt.Println("📚 Documentation:")
 	fmt.Println("   - Run './go-scim-sync --help' for command options")

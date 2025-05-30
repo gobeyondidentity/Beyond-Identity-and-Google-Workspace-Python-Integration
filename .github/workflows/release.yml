@@ -1,0 +1,52 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Set up Go
+      uses: actions/setup-go@v4
+      with:
+        go-version: '1.23'
+    
+    - name: Get version
+      id: version
+      run: echo "VERSION=${GITHUB_REF#refs/tags/}" >> $GITHUB_OUTPUT
+    
+    - name: Build binaries
+      run: |
+        # Build for Linux
+        GOOS=linux GOARCH=amd64 go build -o scim-sync-linux-amd64 ./cmd
+        
+        # Build for Windows
+        GOOS=windows GOARCH=amd64 go build -o scim-sync-windows-amd64.exe ./cmd
+        
+        # Build for macOS Intel
+        GOOS=darwin GOARCH=amd64 go build -o scim-sync-macos-amd64 ./cmd
+        
+        # Build for macOS Apple Silicon
+        GOOS=darwin GOARCH=arm64 go build -o scim-sync-macos-arm64 ./cmd
+    
+    - name: Create release
+      uses: softprops/action-gh-release@v1
+      with:
+        files: |
+          scim-sync-linux-amd64
+          scim-sync-windows-amd64.exe
+          scim-sync-macos-amd64
+          scim-sync-macos-arm64
+          configs/config.example.yaml
+        name: Release ${{ steps.version.outputs.VERSION }}
+        draft: false
+        prerelease: false
+        generate_release_notes: true
