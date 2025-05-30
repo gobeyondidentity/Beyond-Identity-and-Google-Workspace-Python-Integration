@@ -268,7 +268,7 @@ func TestValidateToken(t *testing.T) {
 	}{
 		{
 			name:     "valid JWT token",
-			token:    "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c",
+			token:    "test-header-part-12345678901234567890.test-payload-part-12345678901234567890.test-signature-part-12345678901234567890",
 			expected: true,
 		},
 		{
@@ -313,10 +313,10 @@ func TestExtractTokenFromPythonConfig(t *testing.T) {
 		{
 			name: "valid python config with token",
 			fileContent: `# Python config
-BI_TENANT_API_TOKEN = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c"
+BI_TENANT_API_TOKEN = "test-header-part-12345678901234567890.test-payload-part-12345678901234567890.test-signature-part-12345678901234567890"
 OTHER_CONFIG = "value"`,
 			expectToken:   true,
-			expectedToken: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c",
+			expectedToken: "test-header-part-12345678901234567890.test-payload-part-12345678901234567890.test-signature-part-12345678901234567890",
 		},
 		{
 			name: "python config without token",
