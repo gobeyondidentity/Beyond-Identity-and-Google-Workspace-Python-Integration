@@ -1,0 +1,41 @@
+# Go SCIM Sync Configuration File
+# This is an example configuration for syncing users from Google Workspace to Beyond Identity
+
+# Application settings
+app:
+  log_level: "info"          # Options: debug, info, warn, error
+  test_mode: true            # Set to false to perform actual changes
+
+# Google Workspace configuration
+google_workspace:
+  domain: "byndid-mail.com"                    # Your Google Workspace domain
+  super_admin_email: "nmelo@byndid-mail.com"  # Super admin email for impersonation
+  service_account_key_path: "../beyond-identity-sync-byndid.json"  # Path to service account JSON file
+
+# Beyond Identity configuration  
+beyond_identity:
+  api_token: "${BI_API_TOKEN}"                           # API token (use environment variable)
+  scim_base_url: "https://api.byndid.com/scim/v2"       # SCIM API base URL
+  native_api_url: "https://api.byndid.com/v2"           # Native API base URL  
+  group_prefix: "GoogleSCIM_"                            # Prefix for created groups
+
+# Synchronization settings
+sync:
+  groups:                                      # List of Google Workspace groups to sync
+    - "scim_test@byndid-mail.com"
+  retry_attempts: 3                            # Number of retry attempts for failed operations
+  retry_delay_seconds: 30                      # Delay between retry attempts
+
+# Server mode settings (for 'server' command)
+server:
+  port: 8080                                   # HTTP server port
+  schedule_enabled: true                       # Enable automatic sync scheduling
+  schedule: "0 */6 * * *"                     # Cron schedule (every 6 hours)
+
+# Instructions:
+# 1. Copy this file to config.yaml
+# 2. Update the values with your actual configuration
+# 3. Set the BI_API_TOKEN environment variable: export BI_API_TOKEN="your-token-here"
+# 4. Ensure your service account JSON file is in the correct location
+# 5. Run: go-scim-sync validate-config to test your configuration
+# 6. Run: go-scim-sync run to start synchronization
