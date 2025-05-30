@@ -14,7 +14,7 @@ google_workspace:
 
 # Beyond Identity configuration  
 beyond_identity:
-  api_token: "${BI_API_TOKEN}"                           # API token (use environment variable)
+  api_token: ""                                          # Your Beyond Identity API token
   scim_base_url: "https://api.byndid.com/scim/v2"       # SCIM API base URL
   native_api_url: "https://api.byndid.com/v2"           # Native API base URL  
   group_prefix: "GoogleSCIM_"                            # Prefix for created groups
@@ -30,7 +30,7 @@ sync:
 # Instructions:
 # 1. Copy this file to config.yaml
 # 2. Update the values with your actual configuration
-# 3. Set the BI_API_TOKEN environment variable: export BI_API_TOKEN="your-token-here"
+# 3. Set your Beyond Identity API token in the api_token field above
 # 4. Ensure your service account JSON file is in the correct location
 # 5. Run: go-scim-sync validate-config to test your configuration
 # 6. Run: go-scim-sync run to start synchronization

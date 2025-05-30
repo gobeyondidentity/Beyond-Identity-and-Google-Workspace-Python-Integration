@@ -27,7 +27,7 @@ google_workspace:
 
 # Beyond Identity configuration  
 beyond_identity:
-  api_token: "%s"                           # API token (use environment variable)
+  api_token: "%s"                           # Your Beyond Identity API token
   scim_base_url: "%s"       # SCIM API base URL
   native_api_url: "%s"           # Native API base URL  
   group_prefix: "%s"                            # Prefix for created groups
@@ -45,10 +45,9 @@ server:
   schedule: "%s"                     # Cron schedule
 
 # Usage:
-# 1. Set environment variables: export BI_API_TOKEN="your-token"
-# 2. Validate config: ./go-scim-sync validate-config
-# 3. Run one-time sync: ./go-scim-sync run
-# 4. Start server mode: ./go-scim-sync server
+# 1. Validate config: ./go-scim-sync validate-config
+# 2. Run one-time sync: ./go-scim-sync run
+# 3. Start server mode: ./go-scim-sync server
 #
 # Server endpoints (when running in server mode):
 # - Health check: GET http://localhost:%d/health

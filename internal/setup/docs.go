@@ -50,28 +50,21 @@ This will guide you through:
 - Sync settings (groups to sync, retry configuration)
 - Server mode settings (port, scheduling)
 
-### 2. Set Environment Variables
-After the wizard, set your API token:
-
-` + "```bash" + `
-export BI_API_TOKEN="your-beyond-identity-api-token"
-` + "```" + `
-
-### 3. Validate Setup
+### 2. Validate Setup
 Test your configuration:
 
 ` + "```bash" + `
 ./go-scim-sync setup validate
 ` + "```" + `
 
-### 4. Run Your First Sync
+### 3. Run Your First Sync
 Execute a one-time sync:
 
 ` + "```bash" + `
 ./go-scim-sync run
 ` + "```" + `
 
-### 5. Start Server Mode (Optional)
+### 4. Start Server Mode (Optional)
 For continuous operation with HTTP API:
 
 ` + "```bash" + `
@@ -96,7 +89,7 @@ google_workspace:
 
 # Beyond Identity configuration  
 beyond_identity:
-  api_token: "${BI_API_TOKEN}"
+  api_token: "your-beyond-identity-api-token"
   scim_base_url: "https://api.byndid.com/scim/v2"
   native_api_url: "https://api.byndid.com/v2"
   group_prefix: "GoogleSCIM_"
@@ -167,9 +160,10 @@ server:
 
 ## Security Best Practices
 
-1. **Environment Variables**
-   - Always use environment variables for sensitive data
+1. **Configuration Security**
    - Never commit API tokens to version control
+   - Store config.yaml securely with appropriate file permissions
+   - Consider using encrypted storage for production deployments
 
 2. **Service Account Security**
    - Store service account files securely
@@ -451,12 +445,12 @@ func generateTroubleshootingGuide(path string) error {
 
 ### Authentication Issues
 
-#### "BI_API_TOKEN environment variable not set"
+#### "Beyond Identity API token not set in config.yaml"
 **Symptoms:** Error when trying to connect to Beyond Identity API.
 
 **Solutions:**
-1. Set the environment variable: ` + "`export BI_API_TOKEN=\"your-token\"`" + `
-2. Add to your shell profile (` + "`~/.bashrc`" + `, ` + "`~/.zshrc`" + `) for persistence
+1. Set the API token in your config.yaml file under beyond_identity.api_token
+2. Run the setup wizard again: ` + "`./go-scim-sync setup wizard`" + `
 3. Verify the token is valid and has SCIM permissions
 
 #### "Authentication failed" with Beyond Identity
