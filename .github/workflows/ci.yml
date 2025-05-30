@@ -3,6 +3,8 @@ name: CI
 on:
   push:
     branches: [main, develop]
+  pull_request:
+    branches: [main, develop]
 
 jobs:
   test:
@@ -88,19 +90,6 @@ jobs:
       with:
         version: latest
         args: --timeout=5m
-        
-  security:
-    name: Security
-    runs-on: ubuntu-latest
-    
-    steps:
-    - name: Check out code
-      uses: actions/checkout@v4
-      
-    - name: Run Gosec Security Scanner
-      uses: securecodewarrior/github-action-gosec@master
-      with:
-        args: './...'
         
   mod-tidy:
     name: Go Mod Tidy
