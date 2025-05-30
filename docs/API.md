@@ -1,6 +1,6 @@
 # Go SCIM Sync API Reference
 
-When running in server mode (`./go-scim-sync server`), the application provides an HTTP API for management and monitoring.
+When running in server mode (`./scim-sync server`), the application provides an HTTP API for management and monitoring.
 
 ## Base URL
 

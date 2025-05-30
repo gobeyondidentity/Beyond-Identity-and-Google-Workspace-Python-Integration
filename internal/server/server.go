@@ -12,10 +12,10 @@ import (
 
 	"github.com/gorilla/mux"
 	"github.com/sirupsen/logrus"
-	"github.com/gobeyondidentity/go-scim-sync/internal/config"
-	syncengine "github.com/gobeyondidentity/go-scim-sync/internal/sync"
-	"github.com/gobeyondidentity/go-scim-sync/internal/gws"
-	"github.com/gobeyondidentity/go-scim-sync/internal/bi"
+	"github.com/gobeyondidentity/google-workspace-provisioner/internal/config"
+	syncengine "github.com/gobeyondidentity/google-workspace-provisioner/internal/sync"
+	"github.com/gobeyondidentity/google-workspace-provisioner/internal/gws"
+	"github.com/gobeyondidentity/google-workspace-provisioner/internal/bi"
 )
 
 // Server represents the HTTP server for SCIM sync operations

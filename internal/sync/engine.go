@@ -5,9 +5,9 @@ import (
 	"strings"
 	"time"
 
-	"github.com/gobeyondidentity/go-scim-sync/internal/bi"
-	"github.com/gobeyondidentity/go-scim-sync/internal/config"
-	"github.com/gobeyondidentity/go-scim-sync/internal/gws"
+	"github.com/gobeyondidentity/google-workspace-provisioner/internal/bi"
+	"github.com/gobeyondidentity/google-workspace-provisioner/internal/config"
+	"github.com/gobeyondidentity/google-workspace-provisioner/internal/gws"
 	"github.com/sirupsen/logrus"
 )
 

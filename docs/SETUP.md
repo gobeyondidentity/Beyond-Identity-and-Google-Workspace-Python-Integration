@@ -6,7 +6,7 @@
 The easiest way to get started is using the interactive setup wizard:
 
 ```bash
-./go-scim-sync setup wizard
+./scim-sync setup wizard
 ```
 
 This will guide you through:
@@ -27,21 +27,21 @@ export BI_API_TOKEN="your-beyond-identity-api-token"
 Test your configuration:
 
 ```bash
-./go-scim-sync setup validate
+./scim-sync setup validate
 ```
 
 ### 4. Run Your First Sync
 Execute a one-time sync:
 
 ```bash
-./go-scim-sync run
+./scim-sync run
 ```
 
 ### 5. Start Server Mode (Optional)
 For continuous operation with HTTP API:
 
 ```bash
-./go-scim-sync server
+./scim-sync server
 ```
 
 ## Manual Configuration

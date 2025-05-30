@@ -5,14 +5,14 @@ import (
 	"os"
 
 	"github.com/spf13/cobra"
-	"github.com/gobeyondidentity/go-scim-sync/internal/config"
-	"github.com/gobeyondidentity/go-scim-sync/internal/logger"
-	"github.com/gobeyondidentity/go-scim-sync/internal/gws"
-	"github.com/gobeyondidentity/go-scim-sync/internal/bi"
-	"github.com/gobeyondidentity/go-scim-sync/internal/sync"
-	"github.com/gobeyondidentity/go-scim-sync/internal/server"
-	"github.com/gobeyondidentity/go-scim-sync/internal/wizard"
-	"github.com/gobeyondidentity/go-scim-sync/internal/setup"
+	"github.com/gobeyondidentity/google-workspace-provisioner/internal/config"
+	"github.com/gobeyondidentity/google-workspace-provisioner/internal/logger"
+	"github.com/gobeyondidentity/google-workspace-provisioner/internal/gws"
+	"github.com/gobeyondidentity/google-workspace-provisioner/internal/bi"
+	"github.com/gobeyondidentity/google-workspace-provisioner/internal/sync"
+	"github.com/gobeyondidentity/google-workspace-provisioner/internal/server"
+	"github.com/gobeyondidentity/google-workspace-provisioner/internal/wizard"
+	"github.com/gobeyondidentity/google-workspace-provisioner/internal/setup"
 )
 
 var (
@@ -106,9 +106,9 @@ var setupDocsCmd = &cobra.Command{
 var versionCmd = &cobra.Command{
 	Use:   "version",
 	Short: "Print version information",
-	Long:  `Print version information for go-scim-sync.`,
+	Long:  `Print version information for scim-sync.`,
 	Run: func(cmd *cobra.Command, args []string) {
-		fmt.Println("go-scim-sync version 0.1.0 (MVP)")
+		fmt.Println("scim-sync version 0.1.0 (MVP)")
 		fmt.Println("Built with Go")
 	},
 }

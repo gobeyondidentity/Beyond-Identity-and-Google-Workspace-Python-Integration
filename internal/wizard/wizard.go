@@ -8,7 +8,7 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/gobeyondidentity/go-scim-sync/internal/config"
+	"github.com/gobeyondidentity/google-workspace-provisioner/internal/config"
 )
 
 // Wizard handles interactive configuration setup
@@ -19,8 +19,10 @@ type Wizard struct {
 
 // NewWizard creates a new configuration wizard
 func NewWizard() *Wizard {
+	// Create reader with larger buffer to handle long API tokens
+	reader := bufio.NewReaderSize(os.Stdin, 8192)
 	return &Wizard{
-		reader: bufio.NewReader(os.Stdin),
+		reader: reader,
 		config: &config.Config{},
 	}
 }
@@ -56,9 +58,10 @@ func (w *Wizard) Run() error {
 		return fmt.Errorf("failed to configure server settings: %w", err)
 	}
 
-	// Set defaults and validate
+	// Set defaults and validate (skip API token validation if not set)
 	w.config.SetDefaults()
-	if err := w.config.Validate(); err != nil {
+	skipAPIToken := w.config.BeyondIdentity.APIToken == ""
+	if err := w.config.ValidateWithOptions(config.ValidateOptions{SkipAPIToken: skipAPIToken}); err != nil {
 		fmt.Printf("⚠️  Configuration validation failed: %v\n", err)
 		fmt.Println("Please review your settings and try again.")
 		return err
@@ -138,10 +141,18 @@ func (w *Wizard) configureBeyondIdentity() error {
 	// API token
 	fmt.Println("📝 API Token Setup:")
 	fmt.Println("You need a Beyond Identity API token with SCIM permissions.")
+	fmt.Println("💡 Recommended: Use option 2 (file path) to avoid input buffer issues")
+	fmt.Println()
 	
-	token := w.promptRequired("Beyond Identity API token")
+	token := w.promptAPIToken("Beyond Identity API token")
 	w.config.BeyondIdentity.APIToken = token
-	fmt.Println("✅ API token configured")
+	
+	if token == "" {
+		fmt.Println("⚠️  API token not set - you'll need to add it to config.yaml manually")
+		fmt.Println("💡 You can find the token in: deprecated/config.py")
+	} else {
+		fmt.Println("✅ API token configured")
+	}
 
 	// SCIM base URL
 	scimURL := w.promptWithDefault("SCIM API base URL", "https://api.byndid.com/scim/v2")
@@ -282,13 +293,22 @@ func (w *Wizard) showNextSteps(configPath string) {
 	fmt.Println("🎉 Setup Complete!")
 	fmt.Println("═════════════════")
 	fmt.Println()
+	
+	// Check if API token was set
+	if w.config.BeyondIdentity.APIToken == "" {
+		fmt.Println("⚠️  Important: Your API token is not set!")
+		fmt.Printf("   Edit %s and add your Beyond Identity API token to:\n", configPath)
+		fmt.Println("   beyond_identity.api_token: \"your-actual-token-here\"")
+		fmt.Println()
+	}
+	
 	fmt.Println("Next steps:")
-	fmt.Println("1. 🔍 Validate config:   ./go-scim-sync validate-config")
-	fmt.Println("2. 🚀 Test sync:         ./go-scim-sync run")
-	fmt.Println("3. 🌐 Start server:      ./go-scim-sync server")
+	fmt.Println("1. 🔍 Validate config:   ./scim-sync validate-config")
+	fmt.Println("2. 🚀 Test sync:         ./scim-sync run")
+	fmt.Println("3. 🌐 Start server:      ./scim-sync server")
 	fmt.Println()
 	fmt.Println("📚 Documentation:")
-	fmt.Println("   - Run './go-scim-sync --help' for command options")
+	fmt.Println("   - Run './scim-sync --help' for command options")
 	fmt.Println("   - Server API will be available at http://localhost:8080")
 	fmt.Println("   - Health check: curl http://localhost:8080/health")
 	fmt.Println()
@@ -303,7 +323,11 @@ func (w *Wizard) showNextSteps(configPath string) {
 
 func (w *Wizard) prompt(question string) string {
 	fmt.Printf("%s: ", question)
-	input, _ := w.reader.ReadString('\n')
+	input, err := w.reader.ReadString('\n')
+	if err != nil {
+		fmt.Printf("Error reading input: %v\n", err)
+		return ""
+	}
 	return strings.TrimSpace(input)
 }
 
@@ -362,4 +386,142 @@ func (w *Wizard) promptIntWithDefault(question string, defaultValue int) int {
 		
 		fmt.Println("⚠️  Please enter a valid number")
 	}
+}
+
+func (w *Wizard) promptAPIToken(question string) string {
+	fmt.Printf("🔑 %s\n", question)
+	fmt.Println("💡 Choose an option:")
+	fmt.Println("   1. Paste the token directly (may have buffer issues)")
+	fmt.Println("   2. Read from file path (recommended)")
+	fmt.Println("   3. Skip and set it in config.yaml manually later")
+	fmt.Println()
+	fmt.Println("📁 Quick file option: deprecated/config.py already contains your token")
+	
+	choice := w.promptWithDefault("Enter choice (1/2/3)", "2")
+	
+	switch choice {
+	case "1":
+		return w.promptTokenDirect()
+	case "3":
+		fmt.Println("⏭️  Skipping API token - you'll need to set it in config.yaml manually")
+		return ""
+	default:
+		return w.promptTokenFromFile()
+	}
+}
+
+func (w *Wizard) promptTokenDirect() string {
+	fmt.Println("💡 Press Ctrl+C if the input gets stuck after pasting")
+	
+	for attemptCount := 0; attemptCount < 3; attemptCount++ {
+		fmt.Print("Paste your API token: ")
+		
+		// Clear any leftover input from buffer before reading
+		w.reader.Reset(os.Stdin)
+		
+		token, err := w.reader.ReadString('\n')
+		if err != nil {
+			fmt.Printf("❌ Input error: %v\n", err)
+			if attemptCount == 2 {
+				fmt.Println("💡 You can complete the wizard and edit the token in config.yaml manually")
+				return ""
+			}
+			continue
+		}
+		
+		token = strings.TrimSpace(token)
+		if token == "" {
+			fmt.Println("⚠️  API token is required (or press Ctrl+C to skip)")
+			continue
+		}
+		
+		if w.validateToken(token) {
+			return token
+		}
+		
+		// Clear buffer after failed validation to prevent overflow
+		w.reader.Reset(os.Stdin)
+	}
+	
+	// After 3 attempts, let user proceed with empty token
+	fmt.Println("❌ Too many failed attempts. You can set the API token in config.yaml after the wizard completes.")
+	return ""
+}
+
+func (w *Wizard) promptTokenFromFile() string {
+	// Suggest the Python config file first
+	pythonConfigPath := "deprecated/config.py"
+	if _, err := os.Stat(pythonConfigPath); err == nil {
+		if w.promptYesNo(fmt.Sprintf("Extract token from %s?", pythonConfigPath), true) {
+			return w.extractTokenFromPythonConfig(pythonConfigPath)
+		}
+	}
+	
+	filePath := w.promptRequired("Path to file containing API token")
+	
+	content, err := os.ReadFile(filePath)
+	if err != nil {
+		fmt.Printf("❌ Error reading file: %v\n", err)
+		return ""
+	}
+	
+	token := strings.TrimSpace(string(content))
+	if token == "" {
+		fmt.Println("❌ File is empty")
+		return ""
+	}
+	
+	if w.validateToken(token) {
+		fmt.Println("✅ Token loaded from file")
+		return token
+	}
+	
+	return ""
+}
+
+func (w *Wizard) extractTokenFromPythonConfig(pythonConfigPath string) string {
+	content, err := os.ReadFile(pythonConfigPath)
+	if err != nil {
+		fmt.Printf("❌ Error reading %s: %v\n", pythonConfigPath, err)
+		return ""
+	}
+	
+	// Look for BI_TENANT_API_TOKEN = "..." pattern
+	lines := strings.Split(string(content), "\n")
+	for _, line := range lines {
+		line = strings.TrimSpace(line)
+		if strings.HasPrefix(line, "BI_TENANT_API_TOKEN = \"") {
+			// Extract token between quotes
+			start := strings.Index(line, "\"") + 1
+			end := strings.LastIndex(line, "\"")
+			if start > 0 && end > start {
+				token := line[start:end]
+				if w.validateToken(token) {
+					fmt.Println("✅ Token extracted from Python config")
+					return token
+				}
+			}
+		}
+	}
+	
+	fmt.Printf("❌ Could not find valid token in %s\n", pythonConfigPath)
+	return ""
+}
+
+func (w *Wizard) validateToken(token string) bool {
+	// Basic JWT validation - should have 3 parts separated by dots
+	parts := strings.Split(token, ".")
+	if len(parts) != 3 {
+		fmt.Printf("⚠️  Token should be a JWT (3 parts separated by dots), got %d parts\n", len(parts))
+		fmt.Println("   Make sure you copied the complete token")
+		return false
+	}
+	
+	// Check minimum length (JWTs are typically quite long)
+	if len(token) < 100 {
+		fmt.Printf("⚠️  Token seems short (%d chars). Make sure you copied the complete token\n", len(token))
+		return false
+	}
+	
+	return true
 }

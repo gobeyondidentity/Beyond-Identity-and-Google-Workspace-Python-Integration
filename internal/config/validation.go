@@ -27,8 +27,18 @@ func (e ValidationErrors) Error() string {
 	return strings.Join(messages, "; ")
 }
 
+// ValidateOptions provides options for validation
+type ValidateOptions struct {
+	SkipAPIToken bool // Skip API token validation (useful during setup)
+}
+
 // Validate validates the configuration and returns any errors
 func (c *Config) Validate() error {
+	return c.ValidateWithOptions(ValidateOptions{})
+}
+
+// ValidateWithOptions validates the configuration with custom options
+func (c *Config) ValidateWithOptions(opts ValidateOptions) error {
 	var errors ValidationErrors
 
 	// Validate App config
@@ -73,7 +83,7 @@ func (c *Config) Validate() error {
 	}
 
 	// Validate Beyond Identity config
-	if c.BeyondIdentity.APIToken == "" {
+	if !opts.SkipAPIToken && c.BeyondIdentity.APIToken == "" {
 		errors = append(errors, ValidationError{
 			Field:   "beyond_identity.api_token",
 			Message: "API token is required",

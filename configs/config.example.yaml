@@ -32,5 +32,5 @@ sync:
 # 2. Update the values with your actual configuration
 # 3. Set your Beyond Identity API token in the api_token field above
 # 4. Ensure your service account JSON file is in the correct location
-# 5. Run: go-scim-sync validate-config to test your configuration
-# 6. Run: go-scim-sync run to start synchronization
+# 5. Run: scim-sync validate-config to test your configuration
+# 6. Run: scim-sync run to start synchronization

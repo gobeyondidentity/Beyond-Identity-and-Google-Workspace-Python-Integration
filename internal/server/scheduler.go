@@ -7,7 +7,7 @@ import (
 
 	"github.com/robfig/cron/v3"
 	"github.com/sirupsen/logrus"
-	syncengine "github.com/gobeyondidentity/go-scim-sync/internal/sync"
+	syncengine "github.com/gobeyondidentity/google-workspace-provisioner/internal/sync"
 )
 
 // Scheduler handles scheduled sync operations

@@ -101,8 +101,8 @@ sync:
 The application searches for configuration files in this order:
 1. `./config.yaml`
 2. `./config.yml`
-3. `~/.config/go-scim-sync/config.yaml`
-4. `~/.config/go-scim-sync/config.yml`
+3. `~/.config/scim-sync/config.yaml`
+4. `~/.config/scim-sync/config.yml`
 
 ## 🎯 Implementation Status
 

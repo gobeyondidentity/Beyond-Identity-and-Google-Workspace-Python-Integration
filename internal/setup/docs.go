@@ -40,7 +40,7 @@ func generateSetupGuide(path string) error {
 The easiest way to get started is using the interactive setup wizard:
 
 ` + "```bash" + `
-./go-scim-sync setup wizard
+./scim-sync setup wizard
 ` + "```" + `
 
 This will guide you through:
@@ -54,21 +54,21 @@ This will guide you through:
 Test your configuration:
 
 ` + "```bash" + `
-./go-scim-sync setup validate
+./scim-sync setup validate
 ` + "```" + `
 
 ### 3. Run Your First Sync
 Execute a one-time sync:
 
 ` + "```bash" + `
-./go-scim-sync run
+./scim-sync run
 ` + "```" + `
 
 ### 4. Start Server Mode (Optional)
 For continuous operation with HTTP API:
 
 ` + "```bash" + `
-./go-scim-sync server
+./scim-sync server
 ` + "```" + `
 
 ## Manual Configuration
@@ -220,7 +220,7 @@ sync:
 func generateAPIGuide(path string) error {
 	content := `# Go SCIM Sync API Reference
 
-When running in server mode (` + "`./go-scim-sync server`" + `), the application provides an HTTP API for management and monitoring.
+When running in server mode (` + "`./scim-sync server`" + `), the application provides an HTTP API for management and monitoring.
 
 ## Base URL
 
@@ -430,7 +430,7 @@ func generateTroubleshootingGuide(path string) error {
 **Symptoms:** Validation errors when running ` + "`setup validate`" + ` or starting the application.
 
 **Solutions:**
-1. Run the setup wizard again: ` + "`./go-scim-sync setup wizard`" + `
+1. Run the setup wizard again: ` + "`./scim-sync setup wizard`" + `
 2. Check required fields in ` + "`config.yaml`" + `
 3. Ensure all file paths are correct and accessible
 
@@ -450,7 +450,7 @@ func generateTroubleshootingGuide(path string) error {
 
 **Solutions:**
 1. Set the API token in your config.yaml file under beyond_identity.api_token
-2. Run the setup wizard again: ` + "`./go-scim-sync setup wizard`" + `
+2. Run the setup wizard again: ` + "`./scim-sync setup wizard`" + `
 3. Verify the token is valid and has SCIM permissions
 
 #### "Authentication failed" with Beyond Identity
@@ -587,12 +587,12 @@ Look for these patterns in logs:
 #### Validation Command
 Always start troubleshooting with:
 ` + "```bash" + `
-./go-scim-sync setup validate
+./scim-sync setup validate
 ` + "```" + `
 
 #### Collect Debug Information
 1. Run with debug logging enabled
-2. Check configuration: ` + "`./go-scim-sync validate-config`" + `
+2. Check configuration: ` + "`./scim-sync validate-config`" + `
 3. Test individual components with setup validation
 4. Capture relevant log snippets
 
@@ -609,7 +609,7 @@ Always start troubleshooting with:
 - Issue persists across multiple attempts
 
 #### Information to Include
-1. Go SCIM sync version: ` + "`./go-scim-sync version`" + `
+1. Go SCIM sync version: ` + "`./scim-sync version`" + `
 2. Configuration file (with secrets redacted)
 3. Complete error messages
 4. Steps to reproduce the issue

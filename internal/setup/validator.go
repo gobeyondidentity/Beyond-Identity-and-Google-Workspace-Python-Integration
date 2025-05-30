@@ -6,8 +6,8 @@ import (
 	"os"
 	"time"
 
-	"github.com/gobeyondidentity/go-scim-sync/internal/config"
-	"github.com/gobeyondidentity/go-scim-sync/internal/gws"
+	"github.com/gobeyondidentity/google-workspace-provisioner/internal/config"
+	"github.com/gobeyondidentity/google-workspace-provisioner/internal/gws"
 	"github.com/sirupsen/logrus"
 )
 
@@ -338,14 +338,14 @@ func (v *Validator) printSummary(summary *ValidationSummary) {
 		fmt.Println()
 		fmt.Println("💡 Next Steps:")
 		fmt.Println("   1. Fix the issues listed above")
-		fmt.Println("   2. Run validation again: ./go-scim-sync setup validate")
-		fmt.Println("   3. Once all checks pass, try a test sync: ./go-scim-sync run")
+		fmt.Println("   2. Run validation again: ./scim-sync setup validate")
+		fmt.Println("   3. Once all checks pass, try a test sync: ./scim-sync run")
 	} else {
 		fmt.Println()
 		fmt.Println("🎉 All checks passed! Your setup is ready.")
 		fmt.Println("💡 Next Steps:")
-		fmt.Println("   1. Try a test sync: ./go-scim-sync run")
-		fmt.Println("   2. Start server mode: ./go-scim-sync server")
+		fmt.Println("   1. Try a test sync: ./scim-sync run")
+		fmt.Println("   2. Start server mode: ./scim-sync server")
 		fmt.Println("   3. Check the health endpoint: curl http://localhost:8080/health")
 	}
 }

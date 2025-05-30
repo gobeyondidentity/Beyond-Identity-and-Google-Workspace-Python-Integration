@@ -77,8 +77,8 @@ func FindConfigFile() (string, error) {
 	locations := []string{
 		"./config.yaml",
 		"./config.yml",
-		"~/.config/go-scim-sync/config.yaml",
-		"~/.config/go-scim-sync/config.yml",
+		"~/.config/scim-sync/config.yaml",
+		"~/.config/scim-sync/config.yml",
 	}
 
 	for _, location := range locations {

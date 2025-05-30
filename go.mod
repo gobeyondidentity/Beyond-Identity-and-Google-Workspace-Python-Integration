@@ -1,4 +1,4 @@
-module github.com/gobeyondidentity/go-scim-sync
+module github.com/gobeyondidentity/google-workspace-provisioner
 
 go 1.23.0
 

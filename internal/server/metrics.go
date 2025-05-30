@@ -4,7 +4,7 @@ import (
 	"sync"
 	"time"
 
-	syncengine "github.com/gobeyondidentity/go-scim-sync/internal/sync"
+	syncengine "github.com/gobeyondidentity/google-workspace-provisioner/internal/sync"
 )
 
 // Metrics collects and tracks synchronization metrics
