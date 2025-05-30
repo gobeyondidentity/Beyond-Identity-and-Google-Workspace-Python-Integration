@@ -98,17 +98,11 @@ def get_group_members(service, group_email):
 
 def get_user_details(service, user_id):
     """Get detailed user information from Google Workspace"""
-    if TEST_MODE:
-        logger.info(f"[TEST MODE] Would get details for user {user_id}")
-        return {
-            'id': user_id,
-            'primaryEmail': f"test_{user_id}@example.com",
-            'name': {'givenName': 'Test', 'familyName': 'User'},
-            'suspended': False
-        }
-    
     try:
-        return service.users().get(userKey=user_id).execute()
+        user_data = service.users().get(userKey=user_id).execute()
+        if TEST_MODE:
+            logger.info(f"[TEST MODE] Got details for user {user_data['primaryEmail']}")
+        return user_data
     except Exception as e:
         logger.error(f"Error getting user details: {str(e)}")
         return None
@@ -165,13 +159,25 @@ def create_or_update_bi_user(user_data):
                     return user_id
                 
                 # Update existing user
+                given_name = user_data['name'].get('givenName', '')
+                family_name = user_data['name'].get('familyName', '')
+                display_name = f"{given_name} {family_name}".strip() or user_data['primaryEmail']
+                
                 update_data = {
                     "schemas": ["urn:ietf:params:scim:schemas:core:2.0:User"],
                     "userName": user_data['primaryEmail'],
+                    "displayName": display_name,
                     "name": {
-                        "givenName": user_data['name'].get('givenName', ''),
-                        "familyName": user_data['name'].get('familyName', '')
+                        "givenName": given_name,
+                        "familyName": family_name
                     },
+                    "emails": [
+                        {
+                            "value": user_data['primaryEmail'],
+                            "type": "work",
+                            "primary": True
+                        }
+                    ],
                     "active": not user_data.get('suspended', False),
                     "externalId": user_data['id']
                 }
@@ -189,24 +195,36 @@ def create_or_update_bi_user(user_data):
         
         if TEST_MODE:
             logger.info(f"[TEST MODE] Would create new user {user_data['primaryEmail']}")
-            return "test-user-id"
+            return None  # Don't create in test mode, but don't return fake ID
         
         # Create new user
-        user_data = {
+        given_name = user_data['name'].get('givenName', '')
+        family_name = user_data['name'].get('familyName', '')
+        display_name = f"{given_name} {family_name}".strip() or user_data['primaryEmail']
+        
+        create_data = {
             "schemas": ["urn:ietf:params:scim:schemas:core:2.0:User"],
             "userName": user_data['primaryEmail'],
+            "displayName": display_name,
             "name": {
-                "givenName": user_data['name'].get('givenName', ''),
-                "familyName": user_data['name'].get('familyName', '')
+                "givenName": given_name,
+                "familyName": family_name
             },
+            "emails": [
+                {
+                    "value": user_data['primaryEmail'],
+                    "type": "work",
+                    "primary": True
+                }
+            ],
             "active": True,
             "externalId": user_data['id']
         }
-        response = requests.post(BI_SCIM_USERS_URL, headers=headers, json=user_data)
+        response = requests.post(BI_SCIM_USERS_URL, headers=headers, json=create_data)
         
         if response.status_code == 201:
             user_id = response.json()['id']
-            logger.info(f"Created new user {user_data['userName']} with ID: {user_id}")
+            logger.info(f"Created new user {user_data['primaryEmail']} with ID: {user_id}")
             return user_id
         else:
             logger.error(f"Failed to create user: {response.text}")
@@ -218,6 +236,10 @@ def create_or_update_bi_user(user_data):
 def add_user_to_group(user_id, group_id):
     """Add a user to a Beyond Identity group"""
     try:
+        if TEST_MODE:
+            logger.info(f"[TEST MODE] Would add user {user_id} to group {group_id}")
+            return True
+        
         # Get current group members
         response = requests.get(f"{BI_SCIM_GROUPS_URL}/{group_id}", headers=headers)
         if response.status_code != 200:
@@ -229,22 +251,25 @@ def add_user_to_group(user_id, group_id):
         
         # Check if user is already a member
         if any(member['value'] == user_id for member in members):
-            if TEST_MODE:
-                logger.info(f"[TEST MODE] User {user_id} is already a member of group {group_id}")
+            logger.info(f"User {user_id} is already a member of group {group_id}")
             return True
         
-        if TEST_MODE:
-            logger.info(f"[TEST MODE] Would add user {user_id} to group {group_id}")
-            return True
+        # Add user to group using PATCH operation
+        patch_data = {
+            "schemas": ["urn:ietf:params:scim:api:messages:2.0:PatchOp"],
+            "Operations": [
+                {
+                    "op": "add",
+                    "path": "members",
+                    "value": [{"value": user_id}]
+                }
+            ]
+        }
         
-        # Add user to group
-        members.append({"value": user_id})
-        group_data['members'] = members
-        
-        response = requests.put(
+        response = requests.patch(
             f"{BI_SCIM_GROUPS_URL}/{group_id}",
             headers=headers,
-            json=group_data
+            json=patch_data
         )
         
         if response.status_code == 200:
@@ -279,14 +304,21 @@ def remove_user_from_group(user_id, group_id):
             logger.info(f"[TEST MODE] Would remove user {user_id} from group {group_id}")
             return True
         
-        # Remove user from members list
-        members = [member for member in members if member['value'] != user_id]
-        group_data['members'] = members
+        # Remove user from group using PATCH operation
+        patch_data = {
+            "schemas": ["urn:ietf:params:scim:api:messages:2.0:PatchOp"],
+            "Operations": [
+                {
+                    "op": "remove",
+                    "path": f"members[value eq \"{user_id}\"]"
+                }
+            ]
+        }
         
-        response = requests.put(
+        response = requests.patch(
             f"{BI_SCIM_GROUPS_URL}/{group_id}",
             headers=headers,
-            json=group_data
+            json=patch_data
         )
         
         if response.status_code == 200:
@@ -370,6 +402,11 @@ def create_or_get_byid_enrolled_group(service):
 
 def get_bi_enrollment_status(bi_user_id):
     """Check if a user has any active passkeys using the native API"""
+    if not bi_user_id:
+        if TEST_MODE:
+            logger.info(f"[TEST MODE] No user ID provided, skipping enrollment check")
+        return False
+        
     try:
         # Query the native API endpoint
         response = requests.get(
