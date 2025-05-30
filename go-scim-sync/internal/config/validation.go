@@ -108,7 +108,23 @@ func (c *Config) Validate() error {
 	if c.Sync.RetryDelaySeconds < 0 {
 		errors = append(errors, ValidationError{
 			Field:   "sync.retry_delay_seconds",
-			Message: "retry delay must be non-negative",
+			Message: "retry delay seconds must be non-negative",
+		})
+	}
+
+	// Validate server configuration
+	if c.Server.Port < 1 || c.Server.Port > 65535 {
+		errors = append(errors, ValidationError{
+			Field:   "server.port",
+			Message: "port must be between 1 and 65535",
+		})
+	}
+
+	// Validate cron schedule if scheduling is enabled
+	if c.Server.ScheduleEnabled && c.Server.Schedule == "" {
+		errors = append(errors, ValidationError{
+			Field:   "server.schedule",
+			Message: "schedule must be provided when schedule_enabled is true",
 		})
 	}
 

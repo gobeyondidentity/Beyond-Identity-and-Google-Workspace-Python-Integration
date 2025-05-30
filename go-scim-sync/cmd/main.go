@@ -10,6 +10,7 @@ import (
 	"github.com/gobeyondidentity/go-scim-sync/internal/gws"
 	"github.com/gobeyondidentity/go-scim-sync/internal/bi"
 	"github.com/gobeyondidentity/go-scim-sync/internal/sync"
+	"github.com/gobeyondidentity/go-scim-sync/internal/server"
 )
 
 var (
@@ -50,6 +51,18 @@ var validateConfigCmd = &cobra.Command{
 	},
 }
 
+// serverCmd represents the server command
+var serverCmd = &cobra.Command{
+	Use:   "server",
+	Short: "Run in server mode with HTTP API and optional scheduling",
+	Long: `Run the application in server mode. This provides an HTTP API for manual sync operations,
+health checks, and metrics. If scheduling is enabled in configuration, automatic sync operations
+will run according to the specified cron schedule.`,
+	RunE: func(cmd *cobra.Command, args []string) error {
+		return runServer()
+	},
+}
+
 // versionCmd represents the version command
 var versionCmd = &cobra.Command{
 	Use:   "version",
@@ -69,6 +82,7 @@ func init() {
 
 	// Add commands
 	rootCmd.AddCommand(runCmd)
+	rootCmd.AddCommand(serverCmd)
 	rootCmd.AddCommand(validateConfigCmd)
 	rootCmd.AddCommand(versionCmd)
 }
@@ -189,6 +203,38 @@ func validateConfig() error {
 	fmt.Printf("   - Log level: %s\n", cfg.App.LogLevel)
 
 	return nil
+}
+
+// runServer executes server mode
+func runServer() error {
+	if cfg == nil {
+		return fmt.Errorf("configuration not loaded")
+	}
+
+	// Validate configuration
+	if err := cfg.Validate(); err != nil {
+		return fmt.Errorf("configuration validation failed: %w", err)
+	}
+
+	// Setup logger
+	log := logger.Setup(cfg.App.LogLevel, cfg.App.TestMode)
+
+	// Log server start info
+	log.Infof("Starting SCIM sync server on port %d", cfg.Server.Port)
+	if cfg.Server.ScheduleEnabled {
+		log.Infof("Scheduling enabled with cron: %s", cfg.Server.Schedule)
+	} else {
+		log.Info("Scheduling disabled - manual sync only")
+	}
+
+	// Create and start server
+	srv, err := server.NewServer(cfg, log)
+	if err != nil {
+		log.Errorf("Failed to create server: %v", err)
+		return fmt.Errorf("failed to create server: %w", err)
+	}
+
+	return srv.Start()
 }
 
 func main() {

@@ -26,6 +26,12 @@ sync:
   retry_attempts: 3                            # Number of retry attempts for failed operations
   retry_delay_seconds: 30                      # Delay between retry attempts
 
+# Server mode settings (for 'server' command)
+server:
+  port: 8080                                   # HTTP server port
+  schedule_enabled: true                       # Enable automatic sync scheduling
+  schedule: "0 */6 * * *"                     # Cron schedule (every 6 hours)
+
 # Instructions:
 # 1. Copy this file to config.yaml
 # 2. Update the values with your actual configuration

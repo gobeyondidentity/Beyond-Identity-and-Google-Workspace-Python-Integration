@@ -14,6 +14,7 @@ type Config struct {
 	GoogleWorkspace GoogleWorkspaceConfig `yaml:"google_workspace"`
 	BeyondIdentity  BeyondIdentityConfig  `yaml:"beyond_identity"`
 	Sync            SyncConfig            `yaml:"sync"`
+	Server          ServerConfig          `yaml:"server"`
 }
 
 // AppConfig contains application-level settings
@@ -42,6 +43,13 @@ type SyncConfig struct {
 	Groups             []string `yaml:"groups"`
 	RetryAttempts      int      `yaml:"retry_attempts"`
 	RetryDelaySeconds  int      `yaml:"retry_delay_seconds"`
+}
+
+// ServerConfig contains server mode settings
+type ServerConfig struct {
+	Port            int    `yaml:"port"`
+	ScheduleEnabled bool   `yaml:"schedule_enabled"`
+	Schedule        string `yaml:"schedule"`
 }
 
 // Load loads configuration from a YAML file
@@ -111,6 +119,18 @@ func (c *Config) SetDefaults() {
 	
 	if c.Sync.RetryAttempts == 0 {
 		c.Sync.RetryAttempts = 3
+	}
+	
+	if c.Sync.RetryDelaySeconds == 0 {
+		c.Sync.RetryDelaySeconds = 30
+	}
+	
+	if c.Server.Port == 0 {
+		c.Server.Port = 8080
+	}
+	
+	if c.Server.Schedule == "" {
+		c.Server.Schedule = "0 */6 * * *" // Every 6 hours by default
 	}
 	
 	if c.Sync.RetryDelaySeconds == 0 {
