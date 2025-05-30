@@ -22,14 +22,14 @@ var (
 
 // rootCmd represents the base command when called without any subcommands
 var rootCmd = &cobra.Command{
-	Use:   "go-scim-sync",
+	Use:   "scim-sync",
 	Short: "Google Workspace to Beyond Identity SCIM synchronization tool",
 	Long: `A tool for synchronizing users and groups from Google Workspace
 to Beyond Identity using SCIM protocol.
 
 This application supports two modes:
 - One-shot mode: Run synchronization once and exit
-- Server mode: Run continuously with scheduled synchronization (coming soon)`,
+- Server mode: Run continuously with scheduled synchronization and HTTP API`,
 }
 
 // runCmd represents the run command
