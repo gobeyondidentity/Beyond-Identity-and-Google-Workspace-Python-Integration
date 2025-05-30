@@ -1,0 +1,199 @@
+package main
+
+import (
+	"fmt"
+	"os"
+
+	"github.com/spf13/cobra"
+	"github.com/gobeyondidentity/go-scim-sync/internal/config"
+	"github.com/gobeyondidentity/go-scim-sync/internal/logger"
+	"github.com/gobeyondidentity/go-scim-sync/internal/gws"
+	"github.com/gobeyondidentity/go-scim-sync/internal/bi"
+	"github.com/gobeyondidentity/go-scim-sync/internal/sync"
+)
+
+var (
+	cfgFile string
+	cfg     *config.Config
+)
+
+// rootCmd represents the base command when called without any subcommands
+var rootCmd = &cobra.Command{
+	Use:   "go-scim-sync",
+	Short: "Google Workspace to Beyond Identity SCIM synchronization tool",
+	Long: `A tool for synchronizing users and groups from Google Workspace
+to Beyond Identity using SCIM protocol.
+
+This application supports two modes:
+- One-shot mode: Run synchronization once and exit
+- Server mode: Run continuously with scheduled synchronization (coming soon)`,
+}
+
+// runCmd represents the run command
+var runCmd = &cobra.Command{
+	Use:   "run",
+	Short: "Run SCIM synchronization once",
+	Long: `Run a single synchronization operation from Google Workspace to Beyond Identity.
+This will sync all configured groups and their members.`,
+	RunE: func(cmd *cobra.Command, args []string) error {
+		return runSync()
+	},
+}
+
+// validateConfigCmd represents the validate-config command
+var validateConfigCmd = &cobra.Command{
+	Use:   "validate-config",
+	Short: "Validate configuration file",
+	Long:  `Validate the configuration file for syntax and required fields.`,
+	RunE: func(cmd *cobra.Command, args []string) error {
+		return validateConfig()
+	},
+}
+
+// versionCmd represents the version command
+var versionCmd = &cobra.Command{
+	Use:   "version",
+	Short: "Print version information",
+	Long:  `Print version information for go-scim-sync.`,
+	Run: func(cmd *cobra.Command, args []string) {
+		fmt.Println("go-scim-sync version 0.1.0 (MVP)")
+		fmt.Println("Built with Go")
+	},
+}
+
+func init() {
+	cobra.OnInitialize(initConfig)
+
+	// Global flags
+	rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is ./config.yaml)")
+
+	// Add commands
+	rootCmd.AddCommand(runCmd)
+	rootCmd.AddCommand(validateConfigCmd)
+	rootCmd.AddCommand(versionCmd)
+}
+
+// initConfig reads in config file and ENV variables
+func initConfig() {
+	var err error
+	
+	if cfgFile != "" {
+		// Use config file from the flag
+		cfg, err = config.Load(cfgFile)
+	} else {
+		// Find config file in standard locations
+		cfgFile, err = config.FindConfigFile()
+		if err != nil {
+			// Only exit on run command, not on other commands
+			return
+		}
+		cfg, err = config.Load(cfgFile)
+	}
+
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "Error loading config: %v\n", err)
+		os.Exit(1)
+	}
+
+	// Set defaults
+	cfg.SetDefaults()
+}
+
+// runSync executes the main synchronization logic
+func runSync() error {
+	if cfg == nil {
+		return fmt.Errorf("configuration not loaded")
+	}
+
+	// Validate configuration
+	if err := cfg.Validate(); err != nil {
+		return fmt.Errorf("configuration validation failed: %w", err)
+	}
+
+	// Setup logger
+	log := logger.Setup(cfg.App.LogLevel, cfg.App.TestMode)
+
+	// Log process start info
+	logger.LogProcessStart(log, cfg.Sync.Groups, cfg.App.LogLevel)
+	log.Info("Starting main sync process")
+
+	// Create Google Workspace client
+	gwsClient, err := gws.NewClient(
+		cfg.GoogleWorkspace.ServiceAccountKeyPath,
+		cfg.GoogleWorkspace.Domain,
+		cfg.GoogleWorkspace.SuperAdminEmail,
+	)
+	if err != nil {
+		log.Errorf("Failed to create Google Workspace client: %v", err)
+		return fmt.Errorf("failed to create Google Workspace client: %w", err)
+	}
+
+	// Create Beyond Identity client
+	biClient := bi.NewClient(cfg.BeyondIdentity.APIToken, cfg.BeyondIdentity.SCIMBaseURL)
+
+	// Create sync engine
+	engine := sync.NewEngine(gwsClient, biClient, cfg, log)
+
+	// Run synchronization
+	result, err := engine.Sync()
+	if err != nil {
+		log.Errorf("Sync process failed: %v", err)
+		return err
+	}
+
+	// Log final results
+	if len(result.Errors) > 0 {
+		log.Warnf("Sync completed with %d errors", len(result.Errors))
+		for _, syncErr := range result.Errors {
+			log.Errorf("Sync error: %v", syncErr)
+		}
+	} else {
+		log.Info("Sync process completed successfully")
+	}
+
+	return nil
+}
+
+// validateConfig validates the configuration file
+func validateConfig() error {
+	// Load config if not already loaded
+	if cfg == nil {
+		var err error
+		if cfgFile != "" {
+			cfg, err = config.Load(cfgFile)
+		} else {
+			cfgFile, err = config.FindConfigFile()
+			if err != nil {
+				return fmt.Errorf("no config file found: %w", err)
+			}
+			cfg, err = config.Load(cfgFile)
+		}
+		
+		if err != nil {
+			return fmt.Errorf("failed to load config: %w", err)
+		}
+		
+		cfg.SetDefaults()
+	}
+
+	// Validate configuration
+	if err := cfg.Validate(); err != nil {
+		fmt.Fprintf(os.Stderr, "❌ Configuration validation failed:\n%v\n", err)
+		return err
+	}
+
+	fmt.Printf("✅ Configuration file '%s' is valid\n", cfgFile)
+	fmt.Printf("   - Google Workspace domain: %s\n", cfg.GoogleWorkspace.Domain)
+	fmt.Printf("   - Groups to sync: %d\n", len(cfg.Sync.Groups))
+	fmt.Printf("   - Test mode: %t\n", cfg.App.TestMode)
+	fmt.Printf("   - Log level: %s\n", cfg.App.LogLevel)
+
+	return nil
+}
+
+func main() {
+	if err := rootCmd.Execute(); err != nil {
+		fmt.Fprintf(os.Stderr, "Error: %v\n", err)
+		os.Exit(1)
+	}
+}
