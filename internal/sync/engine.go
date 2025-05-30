@@ -13,8 +13,8 @@ import (
 
 // Engine orchestrates the synchronization between Google Workspace and Beyond Identity
 type Engine struct {
-	gwsClient *gws.Client
-	biClient  *bi.Client
+	gwsClient GWSClient
+	biClient  BIClient
 	config    *config.Config
 	logger    *logrus.Logger
 }
@@ -31,7 +31,7 @@ type SyncResult struct {
 }
 
 // NewEngine creates a new sync engine
-func NewEngine(gwsClient *gws.Client, biClient *bi.Client, cfg *config.Config, logger *logrus.Logger) *Engine {
+func NewEngine(gwsClient GWSClient, biClient BIClient, cfg *config.Config, logger *logrus.Logger) *Engine {
 	return &Engine{
 		gwsClient: gwsClient,
 		biClient:  biClient,

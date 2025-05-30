@@ -23,7 +23,7 @@ type Server struct {
 	httpServer *http.Server
 	logger     *logrus.Logger
 	config     *config.Config
-	syncEngine *syncengine.Engine
+	syncEngine SyncEngine
 	scheduler  *Scheduler
 	metrics    *Metrics
 }
