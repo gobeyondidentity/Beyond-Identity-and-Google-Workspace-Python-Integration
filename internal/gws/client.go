@@ -4,8 +4,8 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"os"
 	"net/http"
+	"os"
 
 	"golang.org/x/oauth2/google"
 	"google.golang.org/api/admin/directory/v1"
