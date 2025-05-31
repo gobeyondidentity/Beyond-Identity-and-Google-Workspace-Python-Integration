@@ -23,13 +23,13 @@
 
 ### Authentication Issues
 
-#### "API token not configured"
+#### "Beyond Identity API token not set in config.yaml"
 **Symptoms:** Error when trying to connect to Beyond Identity API.
 
 **Solutions:**
-1. Configure the API token in your `config.yaml` file under `beyond_identity.api_token`
-2. Verify the token is valid and has SCIM permissions
-3. Run setup validation to test connectivity
+1. Set the API token in your config.yaml file under beyond_identity.api_token
+2. Run the setup wizard again: `./scim-sync setup wizard`
+3. Verify the token is valid and has SCIM permissions
 
 #### "Authentication failed" with Beyond Identity
 **Symptoms:** 401 Unauthorized errors when accessing Beyond Identity API.

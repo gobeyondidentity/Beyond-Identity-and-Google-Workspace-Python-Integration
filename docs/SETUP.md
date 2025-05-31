@@ -16,24 +16,21 @@ This will guide you through:
 - Sync settings (groups to sync, retry configuration)
 - Server mode settings (port, scheduling)
 
-### 2. Configure API Token
-After the wizard, ensure your API token is configured in the `config.yaml` file under `beyond_identity.api_token`.
-
-### 3. Validate Setup
+### 2. Validate Setup
 Test your configuration:
 
 ```bash
 ./scim-sync setup validate
 ```
 
-### 4. Run Your First Sync
+### 3. Run Your First Sync
 Execute a one-time sync:
 
 ```bash
 ./scim-sync run
 ```
 
-### 5. Start Server Mode (Optional)
+### 4. Start Server Mode (Optional)
 For continuous operation with HTTP API:
 
 ```bash
@@ -129,9 +126,10 @@ server:
 
 ## Security Best Practices
 
-1. **Environment Variables**
-   - Always use environment variables for sensitive data
+1. **Configuration Security**
    - Never commit API tokens to version control
+   - Store config.yaml securely with appropriate file permissions
+   - Consider using encrypted storage for production deployments
 
 2. **Service Account Security**
    - Store service account files securely
