@@ -178,4 +178,6 @@ This project follows Go standard practices and uses:
 
 ## 📄 License
 
-[License to be added]
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+Copyright (c) 2024 Beyond Identity
