@@ -241,7 +241,7 @@ func (v *Validator) validateBeyondIdentity() *ValidationResult {
 			Duration:  time.Since(start),
 		}
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode == 401 {
 		fmt.Println("❌ FAIL")
