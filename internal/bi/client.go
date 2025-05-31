@@ -119,7 +119,7 @@ func (c *Client) makeRequest(method, url string, body interface{}) (*http.Respon
 
 	// Handle SCIM errors
 	if resp.StatusCode >= 400 {
-		defer resp.Body.Close()
+		defer func() { _ = resp.Body.Close() }()
 		bodyBytes, _ := io.ReadAll(resp.Body)
 
 		var scimErr SCIMError
@@ -142,7 +142,7 @@ func (c *Client) CreateUser(user *User) (*User, error) {
 	if err != nil {
 		return nil, fmt.Errorf("failed to create user: %w", err)
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	var createdUser User
 	if err := json.NewDecoder(resp.Body).Decode(&createdUser); err != nil {
@@ -160,7 +160,7 @@ func (c *Client) UpdateUser(userID string, user *User) (*User, error) {
 	if err != nil {
 		return nil, fmt.Errorf("failed to update user: %w", err)
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	var updatedUser User
 	if err := json.NewDecoder(resp.Body).Decode(&updatedUser); err != nil {
@@ -176,7 +176,7 @@ func (c *Client) GetUser(userID string) (*User, error) {
 	if err != nil {
 		return nil, fmt.Errorf("failed to get user: %w", err)
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	var user User
 	if err := json.NewDecoder(resp.Body).Decode(&user); err != nil {
@@ -195,7 +195,7 @@ func (c *Client) FindUserByEmail(email string) (*User, error) {
 	if err != nil {
 		return nil, fmt.Errorf("failed to search user: %w", err)
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	var searchResult struct {
 		TotalResults int    `json:"totalResults"`
@@ -221,7 +221,7 @@ func (c *Client) CreateGroup(group *Group) (*Group, error) {
 	if err != nil {
 		return nil, fmt.Errorf("failed to create group: %w", err)
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	var createdGroup Group
 	if err := json.NewDecoder(resp.Body).Decode(&createdGroup); err != nil {
@@ -240,7 +240,7 @@ func (c *Client) FindGroupByDisplayName(displayName string) (*Group, error) {
 	if err != nil {
 		return nil, fmt.Errorf("failed to search group: %w", err)
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	var searchResult struct {
 		TotalResults int     `json:"totalResults"`
@@ -292,7 +292,7 @@ func (c *Client) UpdateGroupMembers(groupID string, addMembers, removeMembers []
 	if err != nil {
 		return fmt.Errorf("failed to update group members: %w", err)
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	return nil
 }

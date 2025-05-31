@@ -4,7 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
+	"os"
 	"net/http"
 
 	"golang.org/x/oauth2/google"
@@ -58,7 +58,7 @@ func NewClient(serviceAccountKeyPath, domain, superAdminEmail string) (*Client, 
 	ctx := context.Background()
 
 	// Read service account credentials
-	credentialsJSON, err := ioutil.ReadFile(serviceAccountKeyPath)
+	credentialsJSON, err := os.ReadFile(serviceAccountKeyPath)
 	if err != nil {
 		return nil, fmt.Errorf("failed to read service account file: %w", err)
 	}
