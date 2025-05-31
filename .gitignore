@@ -77,5 +77,10 @@ scim-sync
 scim-sync-*
 *.exe
 
+# Test coverage files
+coverage.out
+coverage.html
+coverage.xml
+
 # Scripts
 start-server.sh
