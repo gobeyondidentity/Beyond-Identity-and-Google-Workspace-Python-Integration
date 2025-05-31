@@ -178,4 +178,8 @@ This project follows Go standard practices and uses:
 
 ## 📄 License
 
-[License to be added]
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+## 📞 Support
+
+For questions, issues, or contributions, please visit our [GitHub repository](https://github.com/gobeyondidentity/google-workspace-provisioner) or open an issue.
