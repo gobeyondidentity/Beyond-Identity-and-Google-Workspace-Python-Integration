@@ -113,6 +113,7 @@ func TestNewEngine(t *testing.T) {
 
 	if engine == nil {
 		t.Error("Expected engine to be created, got nil")
+		return
 	}
 
 	if engine.gwsClient != gwsClient {
@@ -424,11 +425,11 @@ func TestExtractDisplayName(t *testing.T) {
 
 func TestRetryWithBackoff(t *testing.T) {
 	tests := []struct {
-		name         string
-		operation    func() error
-		maxAttempts  int
-		expectError  bool
-		expectCalls  int
+		name        string
+		operation   func() error
+		maxAttempts int
+		expectError bool
+		expectCalls int
 	}{
 		{
 			name: "success on first try",

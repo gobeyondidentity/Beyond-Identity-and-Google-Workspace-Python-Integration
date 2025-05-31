@@ -21,9 +21,9 @@ func TestValidate(t *testing.T) {
 					LogLevel: "info",
 				},
 				GoogleWorkspace: GoogleWorkspaceConfig{
-					Domain:                 "test.com",
-					SuperAdminEmail:        "admin@test.com",
-					ServiceAccountKeyPath:  "/tmp/test.json",
+					Domain:                "test.com",
+					SuperAdminEmail:       "admin@test.com",
+					ServiceAccountKeyPath: "/tmp/test.json",
 				},
 				BeyondIdentity: BeyondIdentityConfig{
 					APIToken: "test-token",
@@ -60,9 +60,9 @@ func TestValidate(t *testing.T) {
 					LogLevel: "invalid",
 				},
 				GoogleWorkspace: GoogleWorkspaceConfig{
-					Domain:                 "test.com",
-					SuperAdminEmail:        "admin@test.com",
-					ServiceAccountKeyPath:  "/tmp/test.json",
+					Domain:                "test.com",
+					SuperAdminEmail:       "admin@test.com",
+					ServiceAccountKeyPath: "/tmp/test.json",
 				},
 				BeyondIdentity: BeyondIdentityConfig{
 					APIToken: "test-token",
@@ -81,9 +81,9 @@ func TestValidate(t *testing.T) {
 					LogLevel: "info",
 				},
 				GoogleWorkspace: GoogleWorkspaceConfig{
-					Domain:                 "test.com",
-					SuperAdminEmail:        "admin@test.com",
-					ServiceAccountKeyPath:  "/tmp/test.json",
+					Domain:                "test.com",
+					SuperAdminEmail:       "admin@test.com",
+					ServiceAccountKeyPath: "/tmp/test.json",
 				},
 				BeyondIdentity: BeyondIdentityConfig{
 					APIToken: "test-token",
@@ -148,9 +148,9 @@ func TestValidateWithOptions(t *testing.T) {
 					LogLevel: "info",
 				},
 				GoogleWorkspace: GoogleWorkspaceConfig{
-					Domain:                 "test.com",
-					SuperAdminEmail:        "admin@test.com",
-					ServiceAccountKeyPath:  "/tmp/test.json",
+					Domain:                "test.com",
+					SuperAdminEmail:       "admin@test.com",
+					ServiceAccountKeyPath: "/tmp/test.json",
 				},
 				BeyondIdentity: BeyondIdentityConfig{
 					APIToken: "", // Empty token
@@ -174,9 +174,9 @@ func TestValidateWithOptions(t *testing.T) {
 					LogLevel: "info",
 				},
 				GoogleWorkspace: GoogleWorkspaceConfig{
-					Domain:                 "test.com",
-					SuperAdminEmail:        "admin@test.com",
-					ServiceAccountKeyPath:  "/tmp/test.json",
+					Domain:                "test.com",
+					SuperAdminEmail:       "admin@test.com",
+					ServiceAccountKeyPath: "/tmp/test.json",
 				},
 				BeyondIdentity: BeyondIdentityConfig{
 					APIToken: "", // Empty token

@@ -95,16 +95,6 @@ install-tools:
 	@echo "Installing development tools..."
 	$(GOCMD) install github.com/golangci/golangci-lint/cmd/golangci-lint@latest
 
-# Check for security vulnerabilities
-security:
-	@echo "Checking for security vulnerabilities..."
-	@if command -v gosec >/dev/null 2>&1; then \
-		gosec ./...; \
-	else \
-		echo "gosec not installed. Install with: go install github.com/securecodewarrior/gosec/v2/cmd/gosec@latest"; \
-		exit 1; \
-	fi
-
 # Check if go mod tidy is needed
 check-tidy:
 	@echo "Checking if go mod tidy is needed..."

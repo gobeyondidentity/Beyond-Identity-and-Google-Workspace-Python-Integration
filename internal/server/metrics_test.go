@@ -13,6 +13,7 @@ func TestNewMetrics(t *testing.T) {
 
 	if metrics == nil {
 		t.Error("Expected metrics to be created, got nil")
+		return
 	}
 
 	if metrics.uptime.IsZero() {
@@ -27,7 +28,7 @@ func TestNewMetrics(t *testing.T) {
 
 func TestRecordSync(t *testing.T) {
 	metrics := NewMetrics()
-	
+
 	// Record a successful sync
 	result := &sync.SyncResult{
 		GroupsProcessed:    2,
@@ -88,7 +89,7 @@ func TestRecordSync(t *testing.T) {
 
 func TestRecordSyncWithErrors(t *testing.T) {
 	metrics := NewMetrics()
-	
+
 	// Record a failed sync
 	result := &sync.SyncResult{
 		GroupsProcessed:    1,
@@ -127,7 +128,7 @@ func TestCalculateSuccessRate(t *testing.T) {
 	// Record successful syncs
 	for i := 0; i < 8; i++ {
 		result := &sync.SyncResult{
-			Errors:   nil,
+			Errors: nil,
 		}
 		metrics.RecordSync(result, 100*time.Millisecond)
 	}
@@ -135,7 +136,7 @@ func TestCalculateSuccessRate(t *testing.T) {
 	// Record failed syncs
 	for i := 0; i < 2; i++ {
 		result := &sync.SyncResult{
-			Errors:   []error{fmt.Errorf("test error")},
+			Errors: []error{fmt.Errorf("test error")},
 		}
 		metrics.RecordSync(result, 100*time.Millisecond)
 	}
@@ -165,7 +166,7 @@ func TestCalculateAverageDuration(t *testing.T) {
 
 	for _, duration := range durations {
 		result := &sync.SyncResult{
-			Errors:   nil,
+			Errors: nil,
 		}
 		metrics.RecordSync(result, duration)
 	}
@@ -179,16 +180,16 @@ func TestCalculateAverageDuration(t *testing.T) {
 
 func TestCalculateUptime(t *testing.T) {
 	metrics := NewMetrics()
-	
+
 	// Wait a small amount of time
 	time.Sleep(10 * time.Millisecond)
-	
+
 	stats := metrics.GetStats()
-	
+
 	if stats.Uptime < 10*time.Millisecond {
 		t.Errorf("Expected uptime to be at least 10ms, got %v", stats.Uptime)
 	}
-	
+
 	if stats.Uptime > 1*time.Second {
 		t.Errorf("Expected uptime to be less than 1s, got %v", stats.Uptime)
 	}
@@ -228,7 +229,6 @@ func TestSyncResult(t *testing.T) {
 	if result.MembershipsRemoved != 1 {
 		t.Errorf("Expected MembershipsRemoved 1, got %d", result.MembershipsRemoved)
 	}
-
 
 	if len(result.Errors) != 1 {
 		t.Errorf("Expected 1 error, got %d", len(result.Errors))

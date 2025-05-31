@@ -44,10 +44,10 @@ type UserGroup struct {
 
 // Group represents a Beyond Identity SCIM group
 type Group struct {
-	ID          string       `json:"id,omitempty"`
-	DisplayName string       `json:"displayName"`
+	ID          string        `json:"id,omitempty"`
+	DisplayName string        `json:"displayName"`
 	Members     []GroupMember `json:"members,omitempty"`
-	Schemas     []string     `json:"schemas"`
+	Schemas     []string      `json:"schemas"`
 }
 
 // GroupMember represents a member of a group
@@ -121,12 +121,12 @@ func (c *Client) makeRequest(method, url string, body interface{}) (*http.Respon
 	if resp.StatusCode >= 400 {
 		defer resp.Body.Close()
 		bodyBytes, _ := io.ReadAll(resp.Body)
-		
+
 		var scimErr SCIMError
 		if err := json.Unmarshal(bodyBytes, &scimErr); err == nil {
 			return resp, &scimErr
 		}
-		
+
 		return resp, fmt.Errorf("HTTP %d: %s", resp.StatusCode, string(bodyBytes))
 	}
 

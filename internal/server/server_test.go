@@ -194,7 +194,7 @@ func TestHandleSync_Error(t *testing.T) {
 
 func TestHandleMetrics(t *testing.T) {
 	server := createTestServer(t)
-	
+
 	// Record some test metrics
 	testResult := &sync.SyncResult{
 		GroupsProcessed:    3,

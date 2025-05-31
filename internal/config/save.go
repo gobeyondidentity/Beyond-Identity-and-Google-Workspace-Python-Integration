@@ -85,7 +85,7 @@ func formatGroups(groups []string) string {
 	if len(groups) == 0 {
 		return ""
 	}
-	
+
 	result := ""
 	for _, group := range groups {
 		result += fmt.Sprintf("\n    - \"%s\"", group)
@@ -99,13 +99,13 @@ func SaveAsYAML(cfg *Config, path string) error {
 	if err != nil {
 		return fmt.Errorf("failed to marshal configuration: %w", err)
 	}
-	
+
 	// Add header comment
 	header := `# Go SCIM Sync Configuration File
 # Generated automatically - modify as needed
 
 `
 	content := header + string(data)
-	
+
 	return os.WriteFile(path, []byte(content), 0644)
 }

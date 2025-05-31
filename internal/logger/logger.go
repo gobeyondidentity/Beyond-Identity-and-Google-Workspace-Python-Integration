@@ -56,7 +56,7 @@ func Setup(logLevel string, testMode bool) *logrus.Logger {
 
 	// Log startup information
 	logger.Info("Starting Google Workspace to Beyond Identity sync process")
-	
+
 	if testMode {
 		logger.Info("TEST MODE ENABLED - No actual changes will be made")
 	}
@@ -71,7 +71,7 @@ func LogProcessStart(logger *logrus.Logger, groups []string, logLevel string) {
 	} else {
 		logger.Infof("Configured to sync the following groups: %s", joinGroups(groups))
 	}
-	
+
 	logger.Infof("Logging enabled at %s level", logLevel)
 }
 
@@ -86,7 +86,7 @@ func joinGroups(groups []string) string {
 	if len(groups) == 2 {
 		return groups[0] + ", " + groups[1]
 	}
-	
+
 	result := ""
 	for i, group := range groups {
 		if i == len(groups)-1 {

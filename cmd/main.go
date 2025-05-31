@@ -4,15 +4,15 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/spf13/cobra"
-	"github.com/gobeyondidentity/google-workspace-provisioner/internal/config"
-	"github.com/gobeyondidentity/google-workspace-provisioner/internal/logger"
-	"github.com/gobeyondidentity/google-workspace-provisioner/internal/gws"
 	"github.com/gobeyondidentity/google-workspace-provisioner/internal/bi"
-	"github.com/gobeyondidentity/google-workspace-provisioner/internal/sync"
+	"github.com/gobeyondidentity/google-workspace-provisioner/internal/config"
+	"github.com/gobeyondidentity/google-workspace-provisioner/internal/gws"
+	"github.com/gobeyondidentity/google-workspace-provisioner/internal/logger"
 	"github.com/gobeyondidentity/google-workspace-provisioner/internal/server"
-	"github.com/gobeyondidentity/google-workspace-provisioner/internal/wizard"
 	"github.com/gobeyondidentity/google-workspace-provisioner/internal/setup"
+	"github.com/gobeyondidentity/google-workspace-provisioner/internal/sync"
+	"github.com/gobeyondidentity/google-workspace-provisioner/internal/wizard"
+	"github.com/spf13/cobra"
 )
 
 var (
@@ -135,7 +135,7 @@ func init() {
 // initConfig reads in config file and ENV variables
 func initConfig() {
 	var err error
-	
+
 	if cfgFile != "" {
 		// Use config file from the flag
 		cfg, err = config.Load(cfgFile)
@@ -227,11 +227,11 @@ func validateConfig() error {
 			}
 			cfg, err = config.Load(cfgFile)
 		}
-		
+
 		if err != nil {
 			return fmt.Errorf("failed to load config: %w", err)
 		}
-		
+
 		cfg.SetDefaults()
 	}
 
@@ -302,11 +302,11 @@ func runSetupValidation() error {
 			}
 			cfg, err = config.Load(cfgFile)
 		}
-		
+
 		if err != nil {
 			return fmt.Errorf("failed to load config: %w", err)
 		}
-		
+
 		cfg.SetDefaults()
 	}
 
@@ -330,7 +330,7 @@ func runDocsGeneration() error {
 	if len(os.Args) > 3 {
 		outputDir = os.Args[3]
 	}
-	
+
 	fmt.Printf("Generating documentation in %s...\n", outputDir)
 	return setup.GenerateDocumentation(outputDir)
 }

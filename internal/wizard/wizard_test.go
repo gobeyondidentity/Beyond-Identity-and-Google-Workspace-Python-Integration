@@ -12,15 +12,16 @@ import (
 
 func TestNewWizard(t *testing.T) {
 	wizard := NewWizard()
-	
+
 	if wizard == nil {
 		t.Error("Expected wizard to be created, got nil")
+		return
 	}
-	
+
 	if wizard.reader == nil {
 		t.Error("Expected reader to be initialized")
 	}
-	
+
 	if wizard.config == nil {
 		t.Error("Expected config to be initialized")
 	}
@@ -305,9 +306,9 @@ func TestValidateToken(t *testing.T) {
 
 func TestExtractTokenFromPythonConfig(t *testing.T) {
 	tests := []struct {
-		name         string
-		fileContent  string
-		expectToken  bool
+		name          string
+		fileContent   string
+		expectToken   bool
 		expectedToken string
 	}{
 		{
@@ -337,7 +338,7 @@ BI_TENANT_API_TOKEN = "invalid.token"`,
 			// Create temp file
 			tmpDir := t.TempDir()
 			configPath := filepath.Join(tmpDir, "config.py")
-			
+
 			err := os.WriteFile(configPath, []byte(tt.fileContent), 0644)
 			if err != nil {
 				t.Fatalf("Failed to write test config: %v", err)

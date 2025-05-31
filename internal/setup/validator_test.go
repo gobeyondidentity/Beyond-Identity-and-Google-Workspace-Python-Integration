@@ -15,6 +15,7 @@ func TestNewValidator(t *testing.T) {
 
 	if validator == nil {
 		t.Error("Expected validator to be created, got nil")
+		return
 	}
 
 	if validator.config != cfg {
@@ -28,10 +29,10 @@ func TestNewValidator(t *testing.T) {
 
 func TestValidateConfiguration(t *testing.T) {
 	tests := []struct {
-		name           string
-		config         *config.Config
-		expectStatus   string
-		expectError    bool
+		name         string
+		config       *config.Config
+		expectStatus string
+		expectError  bool
 	}{
 		{
 			name: "valid configuration",
@@ -40,9 +41,9 @@ func TestValidateConfiguration(t *testing.T) {
 					LogLevel: "info",
 				},
 				GoogleWorkspace: config.GoogleWorkspaceConfig{
-					Domain:                 "test.com",
-					SuperAdminEmail:        "admin@test.com",
-					ServiceAccountKeyPath:  "/tmp/test.json",
+					Domain:                "test.com",
+					SuperAdminEmail:       "admin@test.com",
+					ServiceAccountKeyPath: "/tmp/test.json",
 				},
 				BeyondIdentity: config.BeyondIdentityConfig{
 					APIToken: "test-token",
@@ -157,8 +158,8 @@ func TestValidateEnvironment(t *testing.T) {
 			// Create temp directory for test files
 			tmpDir := t.TempDir()
 			oldWd, _ := os.Getwd()
-			defer os.Chdir(oldWd)
-			os.Chdir(tmpDir)
+			defer func() { _ = os.Chdir(oldWd) }()
+			_ = os.Chdir(tmpDir)
 
 			// Create test files
 			for filename, content := range tt.setupFiles {
