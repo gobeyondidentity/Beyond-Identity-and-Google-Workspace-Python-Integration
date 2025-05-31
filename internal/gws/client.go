@@ -15,9 +15,9 @@ import (
 
 // Client handles Google Workspace Admin SDK operations
 type Client struct {
-	service           *admin.Service
-	domain            string
-	superAdminEmail   string
+	service         *admin.Service
+	domain          string
+	superAdminEmail string
 }
 
 // User represents a Google Workspace user

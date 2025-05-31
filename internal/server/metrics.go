@@ -9,40 +9,40 @@ import (
 
 // Metrics collects and tracks synchronization metrics
 type Metrics struct {
-	mu                    sync.RWMutex
-	totalSyncs            int
-	successfulSyncs       int
-	failedSyncs           int
-	totalUsersCreated     int
-	totalUsersUpdated     int
-	totalGroupsCreated    int
-	totalGroupsProcessed  int
-	totalMembershipsAdded int
+	mu                      sync.RWMutex
+	totalSyncs              int
+	successfulSyncs         int
+	failedSyncs             int
+	totalUsersCreated       int
+	totalUsersUpdated       int
+	totalGroupsCreated      int
+	totalGroupsProcessed    int
+	totalMembershipsAdded   int
 	totalMembershipsRemoved int
-	lastSyncDuration      time.Duration
-	averageSyncDuration   time.Duration
-	lastSyncTime          *time.Time
-	lastError             error
-	uptime                time.Time
+	lastSyncDuration        time.Duration
+	averageSyncDuration     time.Duration
+	lastSyncTime            *time.Time
+	lastError               error
+	uptime                  time.Time
 }
 
 // MetricsStats represents the current metrics statistics
 type MetricsStats struct {
-	TotalSyncs             int           `json:"total_syncs"`
-	SuccessfulSyncs        int           `json:"successful_syncs"`
-	FailedSyncs            int           `json:"failed_syncs"`
-	SuccessRate            float64       `json:"success_rate"`
-	TotalUsersCreated      int           `json:"total_users_created"`
-	TotalUsersUpdated      int           `json:"total_users_updated"`
-	TotalGroupsCreated     int           `json:"total_groups_created"`
-	TotalGroupsProcessed   int           `json:"total_groups_processed"`
-	TotalMembershipsAdded  int           `json:"total_memberships_added"`
+	TotalSyncs              int           `json:"total_syncs"`
+	SuccessfulSyncs         int           `json:"successful_syncs"`
+	FailedSyncs             int           `json:"failed_syncs"`
+	SuccessRate             float64       `json:"success_rate"`
+	TotalUsersCreated       int           `json:"total_users_created"`
+	TotalUsersUpdated       int           `json:"total_users_updated"`
+	TotalGroupsCreated      int           `json:"total_groups_created"`
+	TotalGroupsProcessed    int           `json:"total_groups_processed"`
+	TotalMembershipsAdded   int           `json:"total_memberships_added"`
 	TotalMembershipsRemoved int           `json:"total_memberships_removed"`
-	LastSyncDuration       time.Duration `json:"last_sync_duration"`
-	AverageSyncDuration    time.Duration `json:"average_sync_duration"`
-	LastSyncTime           *time.Time    `json:"last_sync_time"`
-	LastError              string        `json:"last_error,omitempty"`
-	Uptime                 time.Duration `json:"uptime"`
+	LastSyncDuration        time.Duration `json:"last_sync_duration"`
+	AverageSyncDuration     time.Duration `json:"average_sync_duration"`
+	LastSyncTime            *time.Time    `json:"last_sync_time"`
+	LastError               string        `json:"last_error,omitempty"`
+	Uptime                  time.Duration `json:"uptime"`
 }
 
 // NewMetrics creates a new metrics collector
@@ -56,23 +56,23 @@ func NewMetrics() *Metrics {
 func (m *Metrics) RecordSync(result *syncengine.SyncResult, duration time.Duration) {
 	m.mu.Lock()
 	defer m.mu.Unlock()
-	
+
 	m.totalSyncs++
 	if len(result.Errors) == 0 {
 		m.successfulSyncs++
 	} else {
 		m.failedSyncs++
 	}
-	
+
 	m.totalUsersCreated += result.UsersCreated
 	m.totalUsersUpdated += result.UsersUpdated
 	m.totalGroupsCreated += result.GroupsCreated
 	m.totalGroupsProcessed += result.GroupsProcessed
 	m.totalMembershipsAdded += result.MembershipsAdded
 	m.totalMembershipsRemoved += result.MembershipsRemoved
-	
+
 	m.lastSyncDuration = duration
-	
+
 	// Calculate average duration
 	if m.totalSyncs > 0 {
 		totalDuration := time.Duration(int64(m.averageSyncDuration) * int64(m.totalSyncs-1))
@@ -80,10 +80,10 @@ func (m *Metrics) RecordSync(result *syncengine.SyncResult, duration time.Durati
 	} else {
 		m.averageSyncDuration = duration
 	}
-	
+
 	now := time.Now()
 	m.lastSyncTime = &now
-	
+
 	// Clear last error on successful sync
 	if len(result.Errors) == 0 {
 		m.lastError = nil
@@ -96,12 +96,12 @@ func (m *Metrics) RecordSync(result *syncengine.SyncResult, duration time.Durati
 func (m *Metrics) RecordFailedSync(err error, duration time.Duration) {
 	m.mu.Lock()
 	defer m.mu.Unlock()
-	
+
 	m.totalSyncs++
 	m.failedSyncs++
 	m.lastSyncDuration = duration
 	m.lastError = err
-	
+
 	// Calculate average duration
 	if m.totalSyncs > 0 {
 		totalDuration := time.Duration(int64(m.averageSyncDuration) * int64(m.totalSyncs-1))
@@ -109,7 +109,7 @@ func (m *Metrics) RecordFailedSync(err error, duration time.Duration) {
 	} else {
 		m.averageSyncDuration = duration
 	}
-	
+
 	now := time.Now()
 	m.lastSyncTime = &now
 }
@@ -118,17 +118,17 @@ func (m *Metrics) RecordFailedSync(err error, duration time.Duration) {
 func (m *Metrics) GetStats() *MetricsStats {
 	m.mu.RLock()
 	defer m.mu.RUnlock()
-	
+
 	var successRate float64
 	if m.totalSyncs > 0 {
 		successRate = float64(m.successfulSyncs) / float64(m.totalSyncs) * 100
 	}
-	
+
 	var lastErrorStr string
 	if m.lastError != nil {
 		lastErrorStr = m.lastError.Error()
 	}
-	
+
 	return &MetricsStats{
 		TotalSyncs:              m.totalSyncs,
 		SuccessfulSyncs:         m.successfulSyncs,
@@ -152,7 +152,7 @@ func (m *Metrics) GetStats() *MetricsStats {
 func (m *Metrics) Reset() {
 	m.mu.Lock()
 	defer m.mu.Unlock()
-	
+
 	m.totalSyncs = 0
 	m.successfulSyncs = 0
 	m.failedSyncs = 0

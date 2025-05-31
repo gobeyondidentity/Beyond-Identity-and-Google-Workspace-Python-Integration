@@ -10,12 +10,12 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/gobeyondidentity/google-workspace-provisioner/internal/bi"
+	"github.com/gobeyondidentity/google-workspace-provisioner/internal/config"
+	"github.com/gobeyondidentity/google-workspace-provisioner/internal/gws"
+	syncengine "github.com/gobeyondidentity/google-workspace-provisioner/internal/sync"
 	"github.com/gorilla/mux"
 	"github.com/sirupsen/logrus"
-	"github.com/gobeyondidentity/google-workspace-provisioner/internal/config"
-	syncengine "github.com/gobeyondidentity/google-workspace-provisioner/internal/sync"
-	"github.com/gobeyondidentity/google-workspace-provisioner/internal/gws"
-	"github.com/gobeyondidentity/google-workspace-provisioner/internal/bi"
 )
 
 // Server represents the HTTP server for SCIM sync operations
@@ -23,7 +23,7 @@ type Server struct {
 	httpServer *http.Server
 	logger     *logrus.Logger
 	config     *config.Config
-	syncEngine *syncengine.Engine
+	syncEngine SyncEngine
 	scheduler  *Scheduler
 	metrics    *Metrics
 }
@@ -89,7 +89,7 @@ func NewServer(cfg *config.Config, logger *logrus.Logger) (*Server, error) {
 
 	// Create router
 	router := mux.NewRouter()
-	
+
 	server := &Server{
 		logger:     logger,
 		config:     cfg,
@@ -119,13 +119,13 @@ func NewServer(cfg *config.Config, logger *logrus.Logger) (*Server, error) {
 func (s *Server) registerRoutes(router *mux.Router) {
 	// Health check endpoint
 	router.HandleFunc("/health", s.handleHealth).Methods("GET")
-	
+
 	// Manual sync endpoint
 	router.HandleFunc("/sync", s.handleSync).Methods("POST")
-	
+
 	// Metrics endpoint
 	router.HandleFunc("/metrics", s.handleMetrics).Methods("GET")
-	
+
 	// Scheduler control endpoints
 	if s.scheduler != nil {
 		router.HandleFunc("/scheduler/start", s.handleSchedulerStart).Methods("POST")
@@ -157,10 +157,10 @@ func (s *Server) Start() error {
 	}()
 
 	s.logger.Info("SCIM sync server started successfully")
-	
+
 	// Wait for shutdown signal
 	s.waitForShutdown()
-	
+
 	return nil
 }
 
@@ -168,20 +168,20 @@ func (s *Server) Start() error {
 func (s *Server) waitForShutdown() {
 	sigChan := make(chan os.Signal, 1)
 	signal.Notify(sigChan, syscall.SIGINT, syscall.SIGTERM)
-	
+
 	sig := <-sigChan
 	s.logger.Infof("Received signal %s, starting graceful shutdown...", sig)
-	
+
 	// Stop scheduler
 	if s.scheduler != nil {
 		s.scheduler.Stop()
 		s.logger.Info("Scheduler stopped")
 	}
-	
+
 	// Stop HTTP server
 	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 	defer cancel()
-	
+
 	if err := s.httpServer.Shutdown(ctx); err != nil {
 		s.logger.Errorf("HTTP server shutdown error: %v", err)
 	} else {
@@ -192,13 +192,13 @@ func (s *Server) waitForShutdown() {
 // handleHealth handles health check requests
 func (s *Server) handleHealth(w http.ResponseWriter, r *http.Request) {
 	services := make(map[string]string)
-	
+
 	// Check Google Workspace connectivity (simplified check)
 	services["google_workspace"] = "ok"
-	
+
 	// Check Beyond Identity connectivity (simplified check)
 	services["beyond_identity"] = "ok"
-	
+
 	response := HealthResponse{
 		Status:      "healthy",
 		Version:     "0.1.0",
@@ -206,7 +206,7 @@ func (s *Server) handleHealth(w http.ResponseWriter, r *http.Request) {
 		Services:    services,
 		SyncEnabled: s.scheduler != nil,
 	}
-	
+
 	// Add scheduler info if available
 	if s.scheduler != nil {
 		if lastSync := s.scheduler.GetLastSync(); lastSync != nil {
@@ -216,23 +216,26 @@ func (s *Server) handleHealth(w http.ResponseWriter, r *http.Request) {
 			response.NextSync = nextSync
 		}
 	}
-	
+
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(response)
+	if err := json.NewEncoder(w).Encode(response); err != nil {
+		s.logger.Error("Failed to encode health response", "error", err)
+		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+	}
 }
 
 // handleSync handles manual sync requests
 func (s *Server) handleSync(w http.ResponseWriter, r *http.Request) {
 	s.logger.Info("Manual sync requested via API")
-	
+
 	startTime := time.Now()
 	result, err := s.syncEngine.Sync()
 	duration := time.Since(startTime)
-	
+
 	response := SyncResponse{
 		Timestamp: time.Now(),
 	}
-	
+
 	if err != nil {
 		s.logger.Errorf("Manual sync failed: %v", err)
 		response.Status = "error"
@@ -253,19 +256,25 @@ func (s *Server) handleSync(w http.ResponseWriter, r *http.Request) {
 			Duration:           duration,
 			Errors:             errorStrings(result.Errors),
 		}
-		
+
 		// Update metrics
 		s.metrics.RecordSync(result, duration)
 	}
-	
+
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(response)
+	if err := json.NewEncoder(w).Encode(response); err != nil {
+		s.logger.Error("Failed to encode sync response", "error", err)
+		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+	}
 }
 
 // handleMetrics handles metrics requests
 func (s *Server) handleMetrics(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(s.metrics.GetStats())
+	if err := json.NewEncoder(w).Encode(s.metrics.GetStats()); err != nil {
+		s.logger.Error("Failed to encode metrics response", "error", err)
+		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+	}
 }
 
 // handleSchedulerStart handles scheduler start requests
@@ -274,15 +283,17 @@ func (s *Server) handleSchedulerStart(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Scheduler not configured", http.StatusBadRequest)
 		return
 	}
-	
+
 	if err := s.scheduler.Start(); err != nil {
 		http.Error(w, fmt.Sprintf("Failed to start scheduler: %v", err), http.StatusInternalServerError)
 		return
 	}
-	
+
 	s.logger.Info("Scheduler started via API")
 	w.WriteHeader(http.StatusOK)
-	json.NewEncoder(w).Encode(map[string]string{"status": "started"})
+	if err := json.NewEncoder(w).Encode(map[string]string{"status": "started"}); err != nil {
+		s.logger.Error("Failed to encode scheduler start response", "error", err)
+	}
 }
 
 // handleSchedulerStop handles scheduler stop requests
@@ -291,12 +302,14 @@ func (s *Server) handleSchedulerStop(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Scheduler not configured", http.StatusBadRequest)
 		return
 	}
-	
+
 	s.scheduler.Stop()
 	s.logger.Info("Scheduler stopped via API")
-	
+
 	w.WriteHeader(http.StatusOK)
-	json.NewEncoder(w).Encode(map[string]string{"status": "stopped"})
+	if err := json.NewEncoder(w).Encode(map[string]string{"status": "stopped"}); err != nil {
+		s.logger.Error("Failed to encode scheduler stop response", "error", err)
+	}
 }
 
 // handleSchedulerStatus handles scheduler status requests
@@ -305,16 +318,19 @@ func (s *Server) handleSchedulerStatus(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Scheduler not configured", http.StatusBadRequest)
 		return
 	}
-	
+
 	status := map[string]interface{}{
 		"running":   s.scheduler.IsRunning(),
 		"schedule":  s.config.Server.Schedule,
 		"last_sync": s.scheduler.GetLastSync(),
 		"next_sync": s.scheduler.GetNextSync(),
 	}
-	
+
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(status)
+	if err := json.NewEncoder(w).Encode(status); err != nil {
+		s.logger.Error("Failed to encode scheduler status response", "error", err)
+		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+	}
 }
 
 // handleVersion handles version requests
@@ -324,9 +340,12 @@ func (s *Server) handleVersion(w http.ResponseWriter, r *http.Request) {
 		"build_time": time.Now().Format(time.RFC3339),
 		"mode":       "server",
 	}
-	
+
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(version)
+	if err := json.NewEncoder(w).Encode(version); err != nil {
+		s.logger.Error("Failed to encode version response", "error", err)
+		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+	}
 }
 
 // errorStrings converts a slice of errors to a slice of strings
@@ -334,7 +353,7 @@ func errorStrings(errors []error) []string {
 	if len(errors) == 0 {
 		return nil
 	}
-	
+
 	result := make([]string, len(errors))
 	for i, err := range errors {
 		result[i] = err.Error()

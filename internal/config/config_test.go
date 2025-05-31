@@ -72,7 +72,7 @@ server:
 			// Create temp file
 			tmpDir := t.TempDir()
 			configPath := filepath.Join(tmpDir, "config.yaml")
-			
+
 			err := os.WriteFile(configPath, []byte(tt.configYAML), 0644)
 			if err != nil {
 				t.Fatalf("Failed to write test config: %v", err)
@@ -80,19 +80,19 @@ server:
 
 			// Test Load
 			config, err := Load(configPath)
-			
+
 			if tt.expectError {
 				if err == nil {
 					t.Errorf("Expected error, got nil")
 				}
 				return
 			}
-			
+
 			if err != nil {
 				t.Errorf("Unexpected error: %v", err)
 				return
 			}
-			
+
 			if config == nil {
 				t.Errorf("Expected config, got nil")
 				return
@@ -143,8 +143,8 @@ func TestFindConfigFile(t *testing.T) {
 			// Create temp directory and change to it
 			tmpDir := t.TempDir()
 			oldWd, _ := os.Getwd()
-			defer os.Chdir(oldWd)
-			os.Chdir(tmpDir)
+			defer func() { _ = os.Chdir(oldWd) }()
+			_ = os.Chdir(tmpDir)
 
 			// Create test files
 			for filename, content := range tt.setupFiles {
@@ -213,7 +213,7 @@ func TestSetDefaults_PreservesExistingValues(t *testing.T) {
 			Port: 9090,
 		},
 	}
-	
+
 	config.SetDefaults()
 
 	// Should preserve existing values

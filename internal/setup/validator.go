@@ -19,10 +19,10 @@ type Validator struct {
 
 // ValidationResult represents the result of a validation check
 type ValidationResult struct {
-	Component string    `json:"component"`
-	Status    string    `json:"status"`
-	Message   string    `json:"message"`
-	Details   string    `json:"details,omitempty"`
+	Component string        `json:"component"`
+	Status    string        `json:"status"`
+	Message   string        `json:"message"`
+	Details   string        `json:"details,omitempty"`
 	Duration  time.Duration `json:"duration"`
 }
 
@@ -40,7 +40,7 @@ type ValidationSummary struct {
 func NewValidator(cfg *config.Config) *Validator {
 	logger := logrus.New()
 	logger.SetLevel(logrus.ErrorLevel) // Only show errors during validation
-	
+
 	return &Validator{
 		config: cfg,
 		logger: logger,
@@ -50,34 +50,34 @@ func NewValidator(cfg *config.Config) *Validator {
 // ValidateSetup performs comprehensive setup validation
 func (v *Validator) ValidateSetup() (*ValidationSummary, error) {
 	startTime := time.Now()
-	
+
 	fmt.Println("🔍 Validating Go SCIM Sync Setup")
 	fmt.Println("═══════════════════════════════")
 	fmt.Println()
-	
+
 	summary := &ValidationSummary{
 		Results: make([]*ValidationResult, 0),
 	}
-	
+
 	// Configuration validation
 	v.addResult(summary, v.validateConfiguration())
-	
+
 	// Environment validation
 	v.addResult(summary, v.validateEnvironment())
-	
+
 	// Google Workspace connectivity
 	v.addResult(summary, v.validateGoogleWorkspace())
-	
+
 	// Beyond Identity connectivity
 	v.addResult(summary, v.validateBeyondIdentity())
-	
+
 	// Group existence check
 	v.addResult(summary, v.validateGroups())
-	
+
 	// Calculate summary
 	summary.Duration = time.Since(startTime)
 	summary.TotalChecks = len(summary.Results)
-	
+
 	for _, result := range summary.Results {
 		if result.Status == "PASS" {
 			summary.Passed++
@@ -85,16 +85,16 @@ func (v *Validator) ValidateSetup() (*ValidationSummary, error) {
 			summary.Failed++
 		}
 	}
-	
+
 	if summary.Failed == 0 {
 		summary.OverallStatus = "PASS"
 	} else {
 		summary.OverallStatus = "FAIL"
 	}
-	
+
 	// Print summary
 	v.printSummary(summary)
-	
+
 	return summary, nil
 }
 
@@ -102,7 +102,7 @@ func (v *Validator) ValidateSetup() (*ValidationSummary, error) {
 func (v *Validator) validateConfiguration() *ValidationResult {
 	fmt.Print("📋 Configuration validation... ")
 	start := time.Now()
-	
+
 	if err := v.config.Validate(); err != nil {
 		fmt.Println("❌ FAIL")
 		return &ValidationResult{
@@ -113,7 +113,7 @@ func (v *Validator) validateConfiguration() *ValidationResult {
 			Duration:  time.Since(start),
 		}
 	}
-	
+
 	fmt.Println("✅ PASS")
 	return &ValidationResult{
 		Component: "Configuration",
@@ -127,19 +127,19 @@ func (v *Validator) validateConfiguration() *ValidationResult {
 func (v *Validator) validateEnvironment() *ValidationResult {
 	fmt.Print("🌍 Environment validation... ")
 	start := time.Now()
-	
+
 	var issues []string
-	
+
 	// Check API token
 	if v.config.BeyondIdentity.APIToken == "" {
 		issues = append(issues, "Beyond Identity API token not set in config.yaml")
 	}
-	
+
 	// Check service account file
 	if _, err := os.Stat(v.config.GoogleWorkspace.ServiceAccountKeyPath); os.IsNotExist(err) {
 		issues = append(issues, fmt.Sprintf("Service account file not found: %s", v.config.GoogleWorkspace.ServiceAccountKeyPath))
 	}
-	
+
 	if len(issues) > 0 {
 		fmt.Println("❌ FAIL")
 		return &ValidationResult{
@@ -150,7 +150,7 @@ func (v *Validator) validateEnvironment() *ValidationResult {
 			Duration:  time.Since(start),
 		}
 	}
-	
+
 	fmt.Println("✅ PASS")
 	return &ValidationResult{
 		Component: "Environment",
@@ -164,7 +164,7 @@ func (v *Validator) validateEnvironment() *ValidationResult {
 func (v *Validator) validateGoogleWorkspace() *ValidationResult {
 	fmt.Print("🔵 Google Workspace connectivity... ")
 	start := time.Now()
-	
+
 	_, err := gws.NewClient(
 		v.config.GoogleWorkspace.ServiceAccountKeyPath,
 		v.config.GoogleWorkspace.Domain,
@@ -180,10 +180,10 @@ func (v *Validator) validateGoogleWorkspace() *ValidationResult {
 			Duration:  time.Since(start),
 		}
 	}
-	
+
 	// Test basic connectivity - client creation validates auth setup
 	// We could expand this to make actual API calls if needed
-	
+
 	fmt.Println("✅ PASS")
 	return &ValidationResult{
 		Component: "Google Workspace",
@@ -198,10 +198,10 @@ func (v *Validator) validateGoogleWorkspace() *ValidationResult {
 func (v *Validator) validateBeyondIdentity() *ValidationResult {
 	fmt.Print("🟢 Beyond Identity connectivity... ")
 	start := time.Now()
-	
+
 	// Get API token
 	apiToken := v.config.BeyondIdentity.APIToken
-	
+
 	if apiToken == "" {
 		fmt.Println("❌ FAIL")
 		return &ValidationResult{
@@ -212,7 +212,7 @@ func (v *Validator) validateBeyondIdentity() *ValidationResult {
 			Duration:  time.Since(start),
 		}
 	}
-	
+
 	// Test connectivity with a simple HTTP request
 	client := &http.Client{Timeout: 10 * time.Second}
 	req, err := http.NewRequest("GET", v.config.BeyondIdentity.SCIMBaseURL+"/Users?count=1", nil)
@@ -226,10 +226,10 @@ func (v *Validator) validateBeyondIdentity() *ValidationResult {
 			Duration:  time.Since(start),
 		}
 	}
-	
+
 	req.Header.Set("Authorization", "Bearer "+apiToken)
 	req.Header.Set("Accept", "application/scim+json")
-	
+
 	resp, err := client.Do(req)
 	if err != nil {
 		fmt.Println("❌ FAIL")
@@ -242,7 +242,7 @@ func (v *Validator) validateBeyondIdentity() *ValidationResult {
 		}
 	}
 	defer resp.Body.Close()
-	
+
 	if resp.StatusCode == 401 {
 		fmt.Println("❌ FAIL")
 		return &ValidationResult{
@@ -253,7 +253,7 @@ func (v *Validator) validateBeyondIdentity() *ValidationResult {
 			Duration:  time.Since(start),
 		}
 	}
-	
+
 	if resp.StatusCode >= 400 {
 		fmt.Println("❌ FAIL")
 		return &ValidationResult{
@@ -264,7 +264,7 @@ func (v *Validator) validateBeyondIdentity() *ValidationResult {
 			Duration:  time.Since(start),
 		}
 	}
-	
+
 	fmt.Println("✅ PASS")
 	return &ValidationResult{
 		Component: "Beyond Identity",
@@ -279,7 +279,7 @@ func (v *Validator) validateBeyondIdentity() *ValidationResult {
 func (v *Validator) validateGroups() *ValidationResult {
 	fmt.Print("👥 Group existence check... ")
 	start := time.Now()
-	
+
 	if len(v.config.Sync.Groups) == 0 {
 		fmt.Println("❌ FAIL")
 		return &ValidationResult{
@@ -289,7 +289,7 @@ func (v *Validator) validateGroups() *ValidationResult {
 			Duration:  time.Since(start),
 		}
 	}
-	
+
 	// For now, just validate that groups are configured
 	// In a full implementation, we could actually check if they exist in GWS
 	fmt.Println("✅ PASS")
@@ -312,17 +312,17 @@ func (v *Validator) printSummary(summary *ValidationSummary) {
 	fmt.Println()
 	fmt.Println("📊 Validation Summary")
 	fmt.Println("════════════════════")
-	
+
 	if summary.OverallStatus == "PASS" {
 		fmt.Printf("✅ Overall Status: %s\n", summary.OverallStatus)
 	} else {
 		fmt.Printf("❌ Overall Status: %s\n", summary.OverallStatus)
 	}
-	
-	fmt.Printf("📈 Results: %d passed, %d failed (total: %d)\n", 
+
+	fmt.Printf("📈 Results: %d passed, %d failed (total: %d)\n",
 		summary.Passed, summary.Failed, summary.TotalChecks)
 	fmt.Printf("⏱️  Duration: %v\n", summary.Duration.Round(time.Millisecond))
-	
+
 	if summary.Failed > 0 {
 		fmt.Println()
 		fmt.Println("❌ Failed Checks:")
@@ -334,7 +334,7 @@ func (v *Validator) printSummary(summary *ValidationSummary) {
 				}
 			}
 		}
-		
+
 		fmt.Println()
 		fmt.Println("💡 Next Steps:")
 		fmt.Println("   1. Fix the issues listed above")

@@ -1,0 +1,3987 @@
+
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+		<title>cmd: Go Coverage Report</title>
+		<style>
+			body {
+				background: black;
+				color: rgb(80, 80, 80);
+			}
+			body, pre, #legend span {
+				font-family: Menlo, monospace;
+				font-weight: bold;
+			}
+			#topbar {
+				background: black;
+				position: fixed;
+				top: 0; left: 0; right: 0;
+				height: 42px;
+				border-bottom: 1px solid rgb(80, 80, 80);
+			}
+			#content {
+				margin-top: 50px;
+			}
+			#nav, #legend {
+				float: left;
+				margin-left: 10px;
+			}
+			#legend {
+				margin-top: 12px;
+			}
+			#nav {
+				margin-top: 10px;
+			}
+			#legend span {
+				margin: 0 5px;
+			}
+			.cov0 { color: rgb(192, 0, 0) }
+.cov1 { color: rgb(128, 128, 128) }
+.cov2 { color: rgb(116, 140, 131) }
+.cov3 { color: rgb(104, 152, 134) }
+.cov4 { color: rgb(92, 164, 137) }
+.cov5 { color: rgb(80, 176, 140) }
+.cov6 { color: rgb(68, 188, 143) }
+.cov7 { color: rgb(56, 200, 146) }
+.cov8 { color: rgb(44, 212, 149) }
+.cov9 { color: rgb(32, 224, 152) }
+.cov10 { color: rgb(20, 236, 155) }
+
+		</style>
+	</head>
+	<body>
+		<div id="topbar">
+			<div id="nav">
+				<select id="files">
+				
+				<option value="file0">github.com/gobeyondidentity/google-workspace-provisioner/cmd/main.go (0.0%)</option>
+				
+				<option value="file1">github.com/gobeyondidentity/google-workspace-provisioner/internal/bi/client.go (0.0%)</option>
+				
+				<option value="file2">github.com/gobeyondidentity/google-workspace-provisioner/internal/config/config.go (91.7%)</option>
+				
+				<option value="file3">github.com/gobeyondidentity/google-workspace-provisioner/internal/config/save.go (0.0%)</option>
+				
+				<option value="file4">github.com/gobeyondidentity/google-workspace-provisioner/internal/config/validation.go (92.7%)</option>
+				
+				<option value="file5">github.com/gobeyondidentity/google-workspace-provisioner/internal/gws/client.go (0.0%)</option>
+				
+				<option value="file6">github.com/gobeyondidentity/google-workspace-provisioner/internal/logger/logger.go (0.0%)</option>
+				
+				<option value="file7">github.com/gobeyondidentity/google-workspace-provisioner/internal/server/metrics.go (52.5%)</option>
+				
+				<option value="file8">github.com/gobeyondidentity/google-workspace-provisioner/internal/server/scheduler.go (0.0%)</option>
+				
+				<option value="file9">github.com/gobeyondidentity/google-workspace-provisioner/internal/server/server.go (38.0%)</option>
+				
+				<option value="file10">github.com/gobeyondidentity/google-workspace-provisioner/internal/setup/docs.go (0.0%)</option>
+				
+				<option value="file11">github.com/gobeyondidentity/google-workspace-provisioner/internal/setup/validator.go (26.8%)</option>
+				
+				<option value="file12">github.com/gobeyondidentity/google-workspace-provisioner/internal/sync/engine.go (86.1%)</option>
+				
+				<option value="file13">github.com/gobeyondidentity/google-workspace-provisioner/internal/wizard/wizard.go (22.0%)</option>
+				
+				</select>
+			</div>
+			<div id="legend">
+				<span>not tracked</span>
+			
+				<span class="cov0">no coverage</span>
+				<span class="cov1">low coverage</span>
+				<span class="cov2">*</span>
+				<span class="cov3">*</span>
+				<span class="cov4">*</span>
+				<span class="cov5">*</span>
+				<span class="cov6">*</span>
+				<span class="cov7">*</span>
+				<span class="cov8">*</span>
+				<span class="cov9">*</span>
+				<span class="cov10">high coverage</span>
+			
+			</div>
+		</div>
+		<div id="content">
+		
+		<pre class="file" id="file0" style="display: none">package main
+
+import (
+        "fmt"
+        "os"
+
+        "github.com/spf13/cobra"
+        "github.com/gobeyondidentity/google-workspace-provisioner/internal/config"
+        "github.com/gobeyondidentity/google-workspace-provisioner/internal/logger"
+        "github.com/gobeyondidentity/google-workspace-provisioner/internal/gws"
+        "github.com/gobeyondidentity/google-workspace-provisioner/internal/bi"
+        "github.com/gobeyondidentity/google-workspace-provisioner/internal/sync"
+        "github.com/gobeyondidentity/google-workspace-provisioner/internal/server"
+        "github.com/gobeyondidentity/google-workspace-provisioner/internal/wizard"
+        "github.com/gobeyondidentity/google-workspace-provisioner/internal/setup"
+)
+
+var (
+        cfgFile string
+        cfg     *config.Config
+)
+
+// rootCmd represents the base command when called without any subcommands
+var rootCmd = &amp;cobra.Command{
+        Use:   "scim-sync",
+        Short: "Google Workspace to Beyond Identity SCIM synchronization tool",
+        Long: `A tool for synchronizing users and groups from Google Workspace
+to Beyond Identity using SCIM protocol.
+
+This application supports two modes:
+- One-shot mode: Run synchronization once and exit
+- Server mode: Run continuously with scheduled synchronization and HTTP API`,
+}
+
+// runCmd represents the run command
+var runCmd = &amp;cobra.Command{
+        Use:   "run",
+        Short: "Run SCIM synchronization once",
+        Long: `Run a single synchronization operation from Google Workspace to Beyond Identity.
+This will sync all configured groups and their members.`,
+        RunE: func(cmd *cobra.Command, args []string) error <span class="cov0" title="0">{
+                return runSync()
+        }</span>,
+}
+
+// validateConfigCmd represents the validate-config command
+var validateConfigCmd = &amp;cobra.Command{
+        Use:   "validate-config",
+        Short: "Validate configuration file",
+        Long:  `Validate the configuration file for syntax and required fields.`,
+        RunE: func(cmd *cobra.Command, args []string) error <span class="cov0" title="0">{
+                return validateConfig()
+        }</span>,
+}
+
+// serverCmd represents the server command
+var serverCmd = &amp;cobra.Command{
+        Use:   "server",
+        Short: "Run in server mode with HTTP API and optional scheduling",
+        Long: `Run the application in server mode. This provides an HTTP API for manual sync operations,
+health checks, and metrics. If scheduling is enabled in configuration, automatic sync operations
+will run according to the specified cron schedule.`,
+        RunE: func(cmd *cobra.Command, args []string) error <span class="cov0" title="0">{
+                return runServer()
+        }</span>,
+}
+
+// setupCmd represents the setup command
+var setupCmd = &amp;cobra.Command{
+        Use:   "setup",
+        Short: "Interactive setup and configuration wizard",
+        Long:  `Interactive setup wizard to help configure Go SCIM sync for first-time use.`,
+}
+
+// setupWizardCmd represents the setup wizard subcommand
+var setupWizardCmd = &amp;cobra.Command{
+        Use:   "wizard",
+        Short: "Run interactive configuration wizard",
+        Long:  `Run an interactive wizard to create configuration file with guided prompts.`,
+        RunE: func(cmd *cobra.Command, args []string) error <span class="cov0" title="0">{
+                return runSetupWizard()
+        }</span>,
+}
+
+// setupValidateCmd represents the setup validate subcommand
+var setupValidateCmd = &amp;cobra.Command{
+        Use:   "validate",
+        Short: "Validate current setup and connectivity",
+        Long:  `Validate configuration file, environment variables, and test connectivity to external services.`,
+        RunE: func(cmd *cobra.Command, args []string) error <span class="cov0" title="0">{
+                return runSetupValidation()
+        }</span>,
+}
+
+// setupDocsCmd represents the setup docs subcommand
+var setupDocsCmd = &amp;cobra.Command{
+        Use:   "docs",
+        Short: "Generate setup and API documentation",
+        Long:  `Generate comprehensive documentation including setup guide, API reference, and troubleshooting.`,
+        RunE: func(cmd *cobra.Command, args []string) error <span class="cov0" title="0">{
+                return runDocsGeneration()
+        }</span>,
+}
+
+// versionCmd represents the version command
+var versionCmd = &amp;cobra.Command{
+        Use:   "version",
+        Short: "Print version information",
+        Long:  `Print version information for scim-sync.`,
+        Run: func(cmd *cobra.Command, args []string) <span class="cov0" title="0">{
+                fmt.Println("scim-sync version 0.1.0 (MVP)")
+                fmt.Println("Built with Go")
+        }</span>,
+}
+
+func init() <span class="cov0" title="0">{
+        cobra.OnInitialize(initConfig)
+
+        // Global flags
+        rootCmd.PersistentFlags().StringVar(&amp;cfgFile, "config", "", "config file (default is ./config.yaml)")
+
+        // Add setup subcommands
+        setupCmd.AddCommand(setupWizardCmd)
+        setupCmd.AddCommand(setupValidateCmd)
+        setupCmd.AddCommand(setupDocsCmd)
+
+        // Add commands
+        rootCmd.AddCommand(runCmd)
+        rootCmd.AddCommand(serverCmd)
+        rootCmd.AddCommand(setupCmd)
+        rootCmd.AddCommand(validateConfigCmd)
+        rootCmd.AddCommand(versionCmd)
+}</span>
+
+// initConfig reads in config file and ENV variables
+func initConfig() <span class="cov0" title="0">{
+        var err error
+        
+        if cfgFile != "" </span><span class="cov0" title="0">{
+                // Use config file from the flag
+                cfg, err = config.Load(cfgFile)
+        }</span> else<span class="cov0" title="0"> {
+                // Find config file in standard locations
+                cfgFile, err = config.FindConfigFile()
+                if err != nil </span><span class="cov0" title="0">{
+                        // Only exit on run command, not on other commands
+                        return
+                }</span>
+                <span class="cov0" title="0">cfg, err = config.Load(cfgFile)</span>
+        }
+
+        <span class="cov0" title="0">if err != nil </span><span class="cov0" title="0">{
+                fmt.Fprintf(os.Stderr, "Error loading config: %v\n", err)
+                os.Exit(1)
+        }</span>
+
+        // Set defaults
+        <span class="cov0" title="0">cfg.SetDefaults()</span>
+}
+
+// runSync executes the main synchronization logic
+func runSync() error <span class="cov0" title="0">{
+        if cfg == nil </span><span class="cov0" title="0">{
+                return fmt.Errorf("configuration not loaded")
+        }</span>
+
+        // Validate configuration
+        <span class="cov0" title="0">if err := cfg.Validate(); err != nil </span><span class="cov0" title="0">{
+                return fmt.Errorf("configuration validation failed: %w", err)
+        }</span>
+
+        // Setup logger
+        <span class="cov0" title="0">log := logger.Setup(cfg.App.LogLevel, cfg.App.TestMode)
+
+        // Log process start info
+        logger.LogProcessStart(log, cfg.Sync.Groups, cfg.App.LogLevel)
+        log.Info("Starting main sync process")
+
+        // Create Google Workspace client
+        gwsClient, err := gws.NewClient(
+                cfg.GoogleWorkspace.ServiceAccountKeyPath,
+                cfg.GoogleWorkspace.Domain,
+                cfg.GoogleWorkspace.SuperAdminEmail,
+        )
+        if err != nil </span><span class="cov0" title="0">{
+                log.Errorf("Failed to create Google Workspace client: %v", err)
+                return fmt.Errorf("failed to create Google Workspace client: %w", err)
+        }</span>
+
+        // Create Beyond Identity client
+        <span class="cov0" title="0">biClient := bi.NewClient(cfg.BeyondIdentity.APIToken, cfg.BeyondIdentity.SCIMBaseURL)
+
+        // Create sync engine
+        engine := sync.NewEngine(gwsClient, biClient, cfg, log)
+
+        // Run synchronization
+        result, err := engine.Sync()
+        if err != nil </span><span class="cov0" title="0">{
+                log.Errorf("Sync process failed: %v", err)
+                return err
+        }</span>
+
+        // Log final results
+        <span class="cov0" title="0">if len(result.Errors) &gt; 0 </span><span class="cov0" title="0">{
+                log.Warnf("Sync completed with %d errors", len(result.Errors))
+                for _, syncErr := range result.Errors </span><span class="cov0" title="0">{
+                        log.Errorf("Sync error: %v", syncErr)
+                }</span>
+        } else<span class="cov0" title="0"> {
+                log.Info("Sync process completed successfully")
+        }</span>
+
+        <span class="cov0" title="0">return nil</span>
+}
+
+// validateConfig validates the configuration file
+func validateConfig() error <span class="cov0" title="0">{
+        // Load config if not already loaded
+        if cfg == nil </span><span class="cov0" title="0">{
+                var err error
+                if cfgFile != "" </span><span class="cov0" title="0">{
+                        cfg, err = config.Load(cfgFile)
+                }</span> else<span class="cov0" title="0"> {
+                        cfgFile, err = config.FindConfigFile()
+                        if err != nil </span><span class="cov0" title="0">{
+                                return fmt.Errorf("no config file found: %w", err)
+                        }</span>
+                        <span class="cov0" title="0">cfg, err = config.Load(cfgFile)</span>
+                }
+                
+                <span class="cov0" title="0">if err != nil </span><span class="cov0" title="0">{
+                        return fmt.Errorf("failed to load config: %w", err)
+                }</span>
+                
+                <span class="cov0" title="0">cfg.SetDefaults()</span>
+        }
+
+        // Validate configuration
+        <span class="cov0" title="0">if err := cfg.Validate(); err != nil </span><span class="cov0" title="0">{
+                fmt.Fprintf(os.Stderr, "❌ Configuration validation failed:\n%v\n", err)
+                return err
+        }</span>
+
+        <span class="cov0" title="0">fmt.Printf("✅ Configuration file '%s' is valid\n", cfgFile)
+        fmt.Printf("   - Google Workspace domain: %s\n", cfg.GoogleWorkspace.Domain)
+        fmt.Printf("   - Groups to sync: %d\n", len(cfg.Sync.Groups))
+        fmt.Printf("   - Test mode: %t\n", cfg.App.TestMode)
+        fmt.Printf("   - Log level: %s\n", cfg.App.LogLevel)
+
+        return nil</span>
+}
+
+// runServer executes server mode
+func runServer() error <span class="cov0" title="0">{
+        if cfg == nil </span><span class="cov0" title="0">{
+                return fmt.Errorf("configuration not loaded")
+        }</span>
+
+        // Validate configuration
+        <span class="cov0" title="0">if err := cfg.Validate(); err != nil </span><span class="cov0" title="0">{
+                return fmt.Errorf("configuration validation failed: %w", err)
+        }</span>
+
+        // Setup logger
+        <span class="cov0" title="0">log := logger.Setup(cfg.App.LogLevel, cfg.App.TestMode)
+
+        // Log server start info
+        log.Infof("Starting SCIM sync server on port %d", cfg.Server.Port)
+        if cfg.Server.ScheduleEnabled </span><span class="cov0" title="0">{
+                log.Infof("Scheduling enabled with cron: %s", cfg.Server.Schedule)
+        }</span> else<span class="cov0" title="0"> {
+                log.Info("Scheduling disabled - manual sync only")
+        }</span>
+
+        // Create and start server
+        <span class="cov0" title="0">srv, err := server.NewServer(cfg, log)
+        if err != nil </span><span class="cov0" title="0">{
+                log.Errorf("Failed to create server: %v", err)
+                return fmt.Errorf("failed to create server: %w", err)
+        }</span>
+
+        <span class="cov0" title="0">return srv.Start()</span>
+}
+
+// runSetupWizard executes the interactive configuration wizard
+func runSetupWizard() error <span class="cov0" title="0">{
+        w := wizard.NewWizard()
+        return w.Run()
+}</span>
+
+// runSetupValidation executes setup validation
+func runSetupValidation() error <span class="cov0" title="0">{
+        // Load existing configuration if available
+        if cfg == nil </span><span class="cov0" title="0">{
+                var err error
+                if cfgFile != "" </span><span class="cov0" title="0">{
+                        cfg, err = config.Load(cfgFile)
+                }</span> else<span class="cov0" title="0"> {
+                        cfgFile, err = config.FindConfigFile()
+                        if err != nil </span><span class="cov0" title="0">{
+                                return fmt.Errorf("no config file found - run 'setup wizard' first: %w", err)
+                        }</span>
+                        <span class="cov0" title="0">cfg, err = config.Load(cfgFile)</span>
+                }
+                
+                <span class="cov0" title="0">if err != nil </span><span class="cov0" title="0">{
+                        return fmt.Errorf("failed to load config: %w", err)
+                }</span>
+                
+                <span class="cov0" title="0">cfg.SetDefaults()</span>
+        }
+
+        <span class="cov0" title="0">validator := setup.NewValidator(cfg)
+        summary, err := validator.ValidateSetup()
+        if err != nil </span><span class="cov0" title="0">{
+                return err
+        }</span>
+
+        // Exit with error code if validation failed
+        <span class="cov0" title="0">if summary.OverallStatus != "PASS" </span><span class="cov0" title="0">{
+                os.Exit(1)
+        }</span>
+
+        <span class="cov0" title="0">return nil</span>
+}
+
+// runDocsGeneration generates documentation
+func runDocsGeneration() error <span class="cov0" title="0">{
+        outputDir := "./docs"
+        if len(os.Args) &gt; 3 </span><span class="cov0" title="0">{
+                outputDir = os.Args[3]
+        }</span>
+        
+        <span class="cov0" title="0">fmt.Printf("Generating documentation in %s...\n", outputDir)
+        return setup.GenerateDocumentation(outputDir)</span>
+}
+
+func main() <span class="cov0" title="0">{
+        if err := rootCmd.Execute(); err != nil </span><span class="cov0" title="0">{
+                fmt.Fprintf(os.Stderr, "Error: %v\n", err)
+                os.Exit(1)
+        }</span>
+}</pre>
+		
+		<pre class="file" id="file1" style="display: none">package bi
+
+import (
+        "bytes"
+        "encoding/json"
+        "fmt"
+        "io"
+        "net/http"
+        "strings"
+        "time"
+)
+
+// Client handles Beyond Identity SCIM API operations
+type Client struct {
+        apiToken    string
+        scimBaseURL string
+        httpClient  *http.Client
+}
+
+// User represents a Beyond Identity SCIM user
+type User struct {
+        ID          string      `json:"id,omitempty"`
+        UserName    string      `json:"userName"`
+        DisplayName string      `json:"displayName"`
+        Emails      []Email     `json:"emails"`
+        Active      bool        `json:"active"`
+        Schemas     []string    `json:"schemas"`
+        Groups      []UserGroup `json:"groups,omitempty"`
+}
+
+// Email represents a user's email address
+type Email struct {
+        Value   string `json:"value"`
+        Type    string `json:"type"`
+        Primary bool   `json:"primary"`
+}
+
+// UserGroup represents a group membership for a user
+type UserGroup struct {
+        Value   string `json:"value"`
+        Ref     string `json:"$ref,omitempty"`
+        Display string `json:"display,omitempty"`
+}
+
+// Group represents a Beyond Identity SCIM group
+type Group struct {
+        ID          string       `json:"id,omitempty"`
+        DisplayName string       `json:"displayName"`
+        Members     []GroupMember `json:"members,omitempty"`
+        Schemas     []string     `json:"schemas"`
+}
+
+// GroupMember represents a member of a group
+type GroupMember struct {
+        Value   string `json:"value"`
+        Ref     string `json:"$ref,omitempty"`
+        Display string `json:"display,omitempty"`
+}
+
+// PatchOperation represents a SCIM PATCH operation
+type PatchOperation struct {
+        Op    string      `json:"op"`
+        Path  string      `json:"path,omitempty"`
+        Value interface{} `json:"value,omitempty"`
+}
+
+// PatchRequest represents a SCIM PATCH request
+type PatchRequest struct {
+        Schemas    []string         `json:"schemas"`
+        Operations []PatchOperation `json:"Operations"`
+}
+
+// SCIMError represents a SCIM API error response
+type SCIMError struct {
+        Schemas []string `json:"schemas"`
+        Detail  string   `json:"detail"`
+        Status  string   `json:"status"`
+}
+
+func (e *SCIMError) Error() string <span class="cov0" title="0">{
+        return fmt.Sprintf("SCIM API error (status %s): %s", e.Status, e.Detail)
+}</span>
+
+// NewClient creates a new Beyond Identity SCIM client
+func NewClient(apiToken, scimBaseURL string) *Client <span class="cov0" title="0">{
+        return &amp;Client{
+                apiToken:    apiToken,
+                scimBaseURL: strings.TrimSuffix(scimBaseURL, "/"),
+                httpClient: &amp;http.Client{
+                        Timeout: 30 * time.Second,
+                },
+        }
+}</span>
+
+// makeRequest performs an HTTP request with proper authentication and error handling
+func (c *Client) makeRequest(method, url string, body interface{}) (*http.Response, error) <span class="cov0" title="0">{
+        var reqBody io.Reader
+        if body != nil </span><span class="cov0" title="0">{
+                jsonBody, err := json.Marshal(body)
+                if err != nil </span><span class="cov0" title="0">{
+                        return nil, fmt.Errorf("failed to marshal request body: %w", err)
+                }</span>
+                <span class="cov0" title="0">reqBody = bytes.NewBuffer(jsonBody)</span>
+        }
+
+        <span class="cov0" title="0">req, err := http.NewRequest(method, url, reqBody)
+        if err != nil </span><span class="cov0" title="0">{
+                return nil, fmt.Errorf("failed to create request: %w", err)
+        }</span>
+
+        <span class="cov0" title="0">req.Header.Set("Authorization", "Bearer "+c.apiToken)
+        req.Header.Set("Content-Type", "application/scim+json")
+        req.Header.Set("Accept", "application/scim+json")
+
+        resp, err := c.httpClient.Do(req)
+        if err != nil </span><span class="cov0" title="0">{
+                return nil, fmt.Errorf("failed to perform request: %w", err)
+        }</span>
+
+        // Handle SCIM errors
+        <span class="cov0" title="0">if resp.StatusCode &gt;= 400 </span><span class="cov0" title="0">{
+                defer resp.Body.Close()
+                bodyBytes, _ := io.ReadAll(resp.Body)
+                
+                var scimErr SCIMError
+                if err := json.Unmarshal(bodyBytes, &amp;scimErr); err == nil </span><span class="cov0" title="0">{
+                        return resp, &amp;scimErr
+                }</span>
+                
+                <span class="cov0" title="0">return resp, fmt.Errorf("HTTP %d: %s", resp.StatusCode, string(bodyBytes))</span>
+        }
+
+        <span class="cov0" title="0">return resp, nil</span>
+}
+
+// CreateUser creates a new user in Beyond Identity
+func (c *Client) CreateUser(user *User) (*User, error) <span class="cov0" title="0">{
+        user.Schemas = []string{"urn:ietf:params:scim:schemas:core:2.0:User"}
+        user.Active = true
+
+        resp, err := c.makeRequest("POST", c.scimBaseURL+"/Users", user)
+        if err != nil </span><span class="cov0" title="0">{
+                return nil, fmt.Errorf("failed to create user: %w", err)
+        }</span>
+        <span class="cov0" title="0">defer resp.Body.Close()
+
+        var createdUser User
+        if err := json.NewDecoder(resp.Body).Decode(&amp;createdUser); err != nil </span><span class="cov0" title="0">{
+                return nil, fmt.Errorf("failed to decode created user: %w", err)
+        }</span>
+
+        <span class="cov0" title="0">return &amp;createdUser, nil</span>
+}
+
+// UpdateUser updates an existing user in Beyond Identity
+func (c *Client) UpdateUser(userID string, user *User) (*User, error) <span class="cov0" title="0">{
+        user.Schemas = []string{"urn:ietf:params:scim:schemas:core:2.0:User"}
+
+        resp, err := c.makeRequest("PUT", c.scimBaseURL+"/Users/"+userID, user)
+        if err != nil </span><span class="cov0" title="0">{
+                return nil, fmt.Errorf("failed to update user: %w", err)
+        }</span>
+        <span class="cov0" title="0">defer resp.Body.Close()
+
+        var updatedUser User
+        if err := json.NewDecoder(resp.Body).Decode(&amp;updatedUser); err != nil </span><span class="cov0" title="0">{
+                return nil, fmt.Errorf("failed to decode updated user: %w", err)
+        }</span>
+
+        <span class="cov0" title="0">return &amp;updatedUser, nil</span>
+}
+
+// GetUser retrieves a user by ID
+func (c *Client) GetUser(userID string) (*User, error) <span class="cov0" title="0">{
+        resp, err := c.makeRequest("GET", c.scimBaseURL+"/Users/"+userID, nil)
+        if err != nil </span><span class="cov0" title="0">{
+                return nil, fmt.Errorf("failed to get user: %w", err)
+        }</span>
+        <span class="cov0" title="0">defer resp.Body.Close()
+
+        var user User
+        if err := json.NewDecoder(resp.Body).Decode(&amp;user); err != nil </span><span class="cov0" title="0">{
+                return nil, fmt.Errorf("failed to decode user: %w", err)
+        }</span>
+
+        <span class="cov0" title="0">return &amp;user, nil</span>
+}
+
+// FindUserByEmail searches for a user by email address
+func (c *Client) FindUserByEmail(email string) (*User, error) <span class="cov0" title="0">{
+        filter := fmt.Sprintf(`userName eq "%s"`, email)
+        url := fmt.Sprintf("%s/Users?filter=%s", c.scimBaseURL, filter)
+
+        resp, err := c.makeRequest("GET", url, nil)
+        if err != nil </span><span class="cov0" title="0">{
+                return nil, fmt.Errorf("failed to search user: %w", err)
+        }</span>
+        <span class="cov0" title="0">defer resp.Body.Close()
+
+        var searchResult struct {
+                TotalResults int    `json:"totalResults"`
+                Resources    []User `json:"Resources"`
+        }
+
+        if err := json.NewDecoder(resp.Body).Decode(&amp;searchResult); err != nil </span><span class="cov0" title="0">{
+                return nil, fmt.Errorf("failed to decode search result: %w", err)
+        }</span>
+
+        <span class="cov0" title="0">if searchResult.TotalResults == 0 </span><span class="cov0" title="0">{
+                return nil, nil // User not found
+        }</span>
+
+        <span class="cov0" title="0">return &amp;searchResult.Resources[0], nil</span>
+}
+
+// CreateGroup creates a new group in Beyond Identity
+func (c *Client) CreateGroup(group *Group) (*Group, error) <span class="cov0" title="0">{
+        group.Schemas = []string{"urn:ietf:params:scim:schemas:core:2.0:Group"}
+
+        resp, err := c.makeRequest("POST", c.scimBaseURL+"/Groups", group)
+        if err != nil </span><span class="cov0" title="0">{
+                return nil, fmt.Errorf("failed to create group: %w", err)
+        }</span>
+        <span class="cov0" title="0">defer resp.Body.Close()
+
+        var createdGroup Group
+        if err := json.NewDecoder(resp.Body).Decode(&amp;createdGroup); err != nil </span><span class="cov0" title="0">{
+                return nil, fmt.Errorf("failed to decode created group: %w", err)
+        }</span>
+
+        <span class="cov0" title="0">return &amp;createdGroup, nil</span>
+}
+
+// FindGroupByDisplayName searches for a group by display name
+func (c *Client) FindGroupByDisplayName(displayName string) (*Group, error) <span class="cov0" title="0">{
+        filter := fmt.Sprintf(`displayName eq "%s"`, displayName)
+        url := fmt.Sprintf("%s/Groups?filter=%s", c.scimBaseURL, filter)
+
+        resp, err := c.makeRequest("GET", url, nil)
+        if err != nil </span><span class="cov0" title="0">{
+                return nil, fmt.Errorf("failed to search group: %w", err)
+        }</span>
+        <span class="cov0" title="0">defer resp.Body.Close()
+
+        var searchResult struct {
+                TotalResults int     `json:"totalResults"`
+                Resources    []Group `json:"Resources"`
+        }
+
+        if err := json.NewDecoder(resp.Body).Decode(&amp;searchResult); err != nil </span><span class="cov0" title="0">{
+                return nil, fmt.Errorf("failed to decode search result: %w", err)
+        }</span>
+
+        <span class="cov0" title="0">if searchResult.TotalResults == 0 </span><span class="cov0" title="0">{
+                return nil, nil // Group not found
+        }</span>
+
+        <span class="cov0" title="0">return &amp;searchResult.Resources[0], nil</span>
+}
+
+// UpdateGroupMembers updates group membership using PATCH operations
+func (c *Client) UpdateGroupMembers(groupID string, addMembers, removeMembers []GroupMember) error <span class="cov0" title="0">{
+        var operations []PatchOperation
+
+        // Add remove operations first
+        for _, member := range removeMembers </span><span class="cov0" title="0">{
+                operations = append(operations, PatchOperation{
+                        Op:   "remove",
+                        Path: fmt.Sprintf("members[value eq \"%s\"]", member.Value),
+                })
+        }</span>
+
+        // Add add operations
+        <span class="cov0" title="0">for _, member := range addMembers </span><span class="cov0" title="0">{
+                operations = append(operations, PatchOperation{
+                        Op:    "add",
+                        Path:  "members",
+                        Value: member,
+                })
+        }</span>
+
+        <span class="cov0" title="0">if len(operations) == 0 </span><span class="cov0" title="0">{
+                return nil // No changes needed
+        }</span>
+
+        <span class="cov0" title="0">patchRequest := PatchRequest{
+                Schemas:    []string{"urn:ietf:params:scim:api:messages:2.0:PatchOp"},
+                Operations: operations,
+        }
+
+        resp, err := c.makeRequest("PATCH", c.scimBaseURL+"/Groups/"+groupID, patchRequest)
+        if err != nil </span><span class="cov0" title="0">{
+                return fmt.Errorf("failed to update group members: %w", err)
+        }</span>
+        <span class="cov0" title="0">defer resp.Body.Close()
+
+        return nil</span>
+}</pre>
+		
+		<pre class="file" id="file2" style="display: none">package config
+
+import (
+        "fmt"
+        "os"
+        "strings"
+
+        "gopkg.in/yaml.v3"
+)
+
+// Config represents the application configuration
+type Config struct {
+        App             AppConfig             `yaml:"app"`
+        GoogleWorkspace GoogleWorkspaceConfig `yaml:"google_workspace"`
+        BeyondIdentity  BeyondIdentityConfig  `yaml:"beyond_identity"`
+        Sync            SyncConfig            `yaml:"sync"`
+        Server          ServerConfig          `yaml:"server"`
+}
+
+// AppConfig contains application-level settings
+type AppConfig struct {
+        LogLevel string `yaml:"log_level"`
+        TestMode bool   `yaml:"test_mode"`
+}
+
+// GoogleWorkspaceConfig contains Google Workspace API settings
+type GoogleWorkspaceConfig struct {
+        Domain                 string `yaml:"domain"`
+        SuperAdminEmail        string `yaml:"super_admin_email"`
+        ServiceAccountKeyPath  string `yaml:"service_account_key_path"`
+}
+
+// BeyondIdentityConfig contains Beyond Identity API settings
+type BeyondIdentityConfig struct {
+        APIToken      string `yaml:"api_token"`
+        SCIMBaseURL   string `yaml:"scim_base_url"`
+        NativeAPIURL  string `yaml:"native_api_url"`
+        GroupPrefix   string `yaml:"group_prefix"`
+}
+
+// SyncConfig contains synchronization settings
+type SyncConfig struct {
+        Groups             []string `yaml:"groups"`
+        RetryAttempts      int      `yaml:"retry_attempts"`
+        RetryDelaySeconds  int      `yaml:"retry_delay_seconds"`
+}
+
+// ServerConfig contains server mode settings
+type ServerConfig struct {
+        Port            int    `yaml:"port"`
+        ScheduleEnabled bool   `yaml:"schedule_enabled"`
+        Schedule        string `yaml:"schedule"`
+}
+
+// Load loads configuration from a YAML file
+func Load(configPath string) (*Config, error) <span class="cov6" title="3">{
+        // Read the configuration file
+        data, err := os.ReadFile(configPath)
+        if err != nil </span><span class="cov0" title="0">{
+                return nil, fmt.Errorf("failed to read config file %s: %w", configPath, err)
+        }</span>
+
+        // Substitute environment variables
+        <span class="cov6" title="3">configData := os.ExpandEnv(string(data))
+
+        // Parse YAML
+        var config Config
+        if err := yaml.Unmarshal([]byte(configData), &amp;config); err != nil </span><span class="cov1" title="1">{
+                return nil, fmt.Errorf("failed to parse config file %s: %w", configPath, err)
+        }</span>
+
+        <span class="cov4" title="2">return &amp;config, nil</span>
+}
+
+// FindConfigFile searches for configuration file in common locations
+func FindConfigFile() (string, error) <span class="cov6" title="3">{
+        locations := []string{
+                "./config.yaml",
+                "./config.yml",
+                "~/.config/scim-sync/config.yaml",
+                "~/.config/scim-sync/config.yml",
+        }
+
+        for _, location := range locations </span><span class="cov10" title="7">{
+                // Expand home directory
+                if strings.HasPrefix(location, "~/") </span><span class="cov4" title="2">{
+                        homeDir, err := os.UserHomeDir()
+                        if err != nil </span><span class="cov0" title="0">{
+                                continue</span>
+                        }
+                        <span class="cov4" title="2">location = strings.Replace(location, "~", homeDir, 1)</span>
+                }
+
+                <span class="cov10" title="7">if _, err := os.Stat(location); err == nil </span><span class="cov4" title="2">{
+                        return location, nil
+                }</span>
+        }
+
+        <span class="cov1" title="1">return "", fmt.Errorf("no configuration file found in any of these locations: %v", locations)</span>
+}
+
+// SetDefaults sets default values for configuration
+func (c *Config) SetDefaults() <span class="cov4" title="2">{
+        if c.App.LogLevel == "" </span><span class="cov1" title="1">{
+                c.App.LogLevel = "info"
+        }</span>
+        
+        <span class="cov4" title="2">if c.BeyondIdentity.SCIMBaseURL == "" </span><span class="cov1" title="1">{
+                c.BeyondIdentity.SCIMBaseURL = "https://api.byndid.com/scim/v2"
+        }</span>
+        
+        <span class="cov4" title="2">if c.BeyondIdentity.NativeAPIURL == "" </span><span class="cov4" title="2">{
+                c.BeyondIdentity.NativeAPIURL = "https://api.byndid.com/v2"
+        }</span>
+        
+        <span class="cov4" title="2">if c.BeyondIdentity.GroupPrefix == "" </span><span class="cov4" title="2">{
+                c.BeyondIdentity.GroupPrefix = "GoogleSCIM_"
+        }</span>
+        
+        <span class="cov4" title="2">if c.Sync.RetryAttempts == 0 </span><span class="cov4" title="2">{
+                c.Sync.RetryAttempts = 3
+        }</span>
+        
+        <span class="cov4" title="2">if c.Sync.RetryDelaySeconds == 0 </span><span class="cov4" title="2">{
+                c.Sync.RetryDelaySeconds = 30
+        }</span>
+        
+        <span class="cov4" title="2">if c.Server.Port == 0 </span><span class="cov1" title="1">{
+                c.Server.Port = 8080
+        }</span>
+        
+        <span class="cov4" title="2">if c.Server.Schedule == "" </span><span class="cov4" title="2">{
+                c.Server.Schedule = "0 */6 * * *" // Every 6 hours by default
+        }</span>
+        
+        <span class="cov4" title="2">if c.Sync.RetryDelaySeconds == 0 </span><span class="cov0" title="0">{
+                c.Sync.RetryDelaySeconds = 30
+        }</span>
+}</pre>
+		
+		<pre class="file" id="file3" style="display: none">package config
+
+import (
+        "fmt"
+        "os"
+
+        "gopkg.in/yaml.v3"
+)
+
+// Save saves configuration to a YAML file with helpful comments
+func Save(cfg *Config, path string) error <span class="cov0" title="0">{
+        // Create YAML content with comments
+        yamlContent := fmt.Sprintf(`# Go SCIM Sync Configuration File
+# This configuration was generated by the setup wizard
+# For more information, see: https://github.com/gobeyondidentity/google-workspace-provisioner
+
+# Application settings
+app:
+  log_level: "%s"          # Options: debug, info, warn, error
+  test_mode: %t            # Set to false to perform actual changes
+
+# Google Workspace configuration
+google_workspace:
+  domain: "%s"                    # Your Google Workspace domain
+  super_admin_email: "%s"  # Super admin email for impersonation
+  service_account_key_path: "%s"  # Path to service account JSON file
+
+# Beyond Identity configuration  
+beyond_identity:
+  api_token: "%s"                           # Your Beyond Identity API token
+  scim_base_url: "%s"       # SCIM API base URL
+  native_api_url: "%s"           # Native API base URL  
+  group_prefix: "%s"                            # Prefix for created groups
+
+# Synchronization settings
+sync:
+  groups:                                      # List of Google Workspace groups to sync%s
+  retry_attempts: %d                            # Number of retry attempts for failed operations
+  retry_delay_seconds: %d                      # Delay between retry attempts
+
+# Server mode settings (for 'server' command)
+server:
+  port: %d                                   # HTTP server port
+  schedule_enabled: %t                      # Enable automatic sync scheduling
+  schedule: "%s"                     # Cron schedule
+
+# Usage:
+# 1. Validate config: ./scim-sync validate-config
+# 2. Run one-time sync: ./scim-sync run
+# 3. Start server mode: ./scim-sync server
+#
+# Server endpoints (when running in server mode):
+# - Health check: GET http://localhost:%d/health
+# - Manual sync: POST http://localhost:%d/sync
+# - Metrics: GET http://localhost:%d/metrics
+# - Version: GET http://localhost:%d/version
+`,
+                cfg.App.LogLevel,
+                cfg.App.TestMode,
+                cfg.GoogleWorkspace.Domain,
+                cfg.GoogleWorkspace.SuperAdminEmail,
+                cfg.GoogleWorkspace.ServiceAccountKeyPath,
+                cfg.BeyondIdentity.APIToken,
+                cfg.BeyondIdentity.SCIMBaseURL,
+                cfg.BeyondIdentity.NativeAPIURL,
+                cfg.BeyondIdentity.GroupPrefix,
+                formatGroups(cfg.Sync.Groups),
+                cfg.Sync.RetryAttempts,
+                cfg.Sync.RetryDelaySeconds,
+                cfg.Server.Port,
+                cfg.Server.ScheduleEnabled,
+                cfg.Server.Schedule,
+                cfg.Server.Port,
+                cfg.Server.Port,
+                cfg.Server.Port,
+                cfg.Server.Port,
+        )
+
+        // Write to file
+        return os.WriteFile(path, []byte(yamlContent), 0644)
+}</span>
+
+// formatGroups formats the groups list for YAML output
+func formatGroups(groups []string) string <span class="cov0" title="0">{
+        if len(groups) == 0 </span><span class="cov0" title="0">{
+                return ""
+        }</span>
+        
+        <span class="cov0" title="0">result := ""
+        for _, group := range groups </span><span class="cov0" title="0">{
+                result += fmt.Sprintf("\n    - \"%s\"", group)
+        }</span>
+        <span class="cov0" title="0">return result</span>
+}
+
+// SaveAsYAML saves configuration using the standard YAML marshaler (alternative method)
+func SaveAsYAML(cfg *Config, path string) error <span class="cov0" title="0">{
+        data, err := yaml.Marshal(cfg)
+        if err != nil </span><span class="cov0" title="0">{
+                return fmt.Errorf("failed to marshal configuration: %w", err)
+        }</span>
+        
+        // Add header comment
+        <span class="cov0" title="0">header := `# Go SCIM Sync Configuration File
+# Generated automatically - modify as needed
+
+`
+        content := header + string(data)
+        
+        return os.WriteFile(path, []byte(content), 0644)</span>
+}</pre>
+		
+		<pre class="file" id="file4" style="display: none">package config
+
+import (
+        "fmt"
+        "os"
+        "strings"
+)
+
+// ValidationError represents a configuration validation error
+type ValidationError struct {
+        Field   string
+        Message string
+}
+
+func (e ValidationError) Error() string <span class="cov10" title="15">{
+        return fmt.Sprintf("validation error for field '%s': %s", e.Field, e.Message)
+}</span>
+
+// ValidationErrors represents multiple validation errors
+type ValidationErrors []ValidationError
+
+func (e ValidationErrors) Error() string <span class="cov5" title="4">{
+        var messages []string
+        for _, err := range e </span><span class="cov9" title="14">{
+                messages = append(messages, err.Error())
+        }</span>
+        <span class="cov5" title="4">return strings.Join(messages, "; ")</span>
+}
+
+// ValidateOptions provides options for validation
+type ValidateOptions struct {
+        SkipAPIToken bool // Skip API token validation (useful during setup)
+}
+
+// Validate validates the configuration and returns any errors
+func (c *Config) Validate() error <span class="cov5" title="4">{
+        return c.ValidateWithOptions(ValidateOptions{})
+}</span>
+
+// ValidateWithOptions validates the configuration with custom options
+func (c *Config) ValidateWithOptions(opts ValidateOptions) error <span class="cov6" title="6">{
+        var errors ValidationErrors
+
+        // Validate App config
+        if c.App.LogLevel != "" </span><span class="cov6" title="6">{
+                validLevels := []string{"debug", "info", "warn", "error"}
+                if !contains(validLevels, c.App.LogLevel) </span><span class="cov1" title="1">{
+                        errors = append(errors, ValidationError{
+                                Field:   "app.log_level",
+                                Message: fmt.Sprintf("must be one of: %v", validLevels),
+                        })
+                }</span>
+        }
+
+        // Validate Google Workspace config
+        <span class="cov6" title="6">if c.GoogleWorkspace.Domain == "" </span><span class="cov1" title="1">{
+                errors = append(errors, ValidationError{
+                        Field:   "google_workspace.domain",
+                        Message: "domain is required",
+                })
+        }</span>
+
+        <span class="cov6" title="6">if c.GoogleWorkspace.SuperAdminEmail == "" </span><span class="cov1" title="1">{
+                errors = append(errors, ValidationError{
+                        Field:   "google_workspace.super_admin_email",
+                        Message: "super admin email is required",
+                })
+        }</span>
+
+        <span class="cov6" title="6">if c.GoogleWorkspace.ServiceAccountKeyPath == "" </span><span class="cov1" title="1">{
+                errors = append(errors, ValidationError{
+                        Field:   "google_workspace.service_account_key_path",
+                        Message: "service account key path is required",
+                })
+        }</span> else<span class="cov6" title="5"> {
+                // Check if service account key file exists
+                if _, err := os.Stat(c.GoogleWorkspace.ServiceAccountKeyPath); os.IsNotExist(err) </span><span class="cov3" title="2">{
+                        errors = append(errors, ValidationError{
+                                Field:   "google_workspace.service_account_key_path",
+                                Message: fmt.Sprintf("service account key file not found: %s", c.GoogleWorkspace.ServiceAccountKeyPath),
+                        })
+                }</span>
+        }
+
+        // Validate Beyond Identity config
+        <span class="cov6" title="6">if !opts.SkipAPIToken &amp;&amp; c.BeyondIdentity.APIToken == "" </span><span class="cov3" title="2">{
+                errors = append(errors, ValidationError{
+                        Field:   "beyond_identity.api_token",
+                        Message: "API token is required",
+                })
+        }</span>
+
+        // Validate Sync config
+        <span class="cov6" title="6">if len(c.Sync.Groups) == 0 </span><span class="cov1" title="1">{
+                errors = append(errors, ValidationError{
+                        Field:   "sync.groups",
+                        Message: "at least one group must be specified",
+                })
+        }</span>
+
+        // Validate email formats
+        <span class="cov6" title="6">for i, group := range c.Sync.Groups </span><span class="cov6" title="6">{
+                if !strings.Contains(group, "@") </span><span class="cov1" title="1">{
+                        errors = append(errors, ValidationError{
+                                Field:   fmt.Sprintf("sync.groups[%d]", i),
+                                Message: fmt.Sprintf("invalid email format: %s", group),
+                        })
+                }</span>
+        }
+
+        <span class="cov6" title="6">if c.Sync.RetryAttempts &lt; 0 </span><span class="cov0" title="0">{
+                errors = append(errors, ValidationError{
+                        Field:   "sync.retry_attempts",
+                        Message: "retry attempts must be non-negative",
+                })
+        }</span>
+
+        <span class="cov6" title="6">if c.Sync.RetryDelaySeconds &lt; 0 </span><span class="cov0" title="0">{
+                errors = append(errors, ValidationError{
+                        Field:   "sync.retry_delay_seconds",
+                        Message: "retry delay seconds must be non-negative",
+                })
+        }</span>
+
+        // Validate server configuration
+        <span class="cov6" title="6">if c.Server.Port &lt; 1 || c.Server.Port &gt; 65535 </span><span class="cov4" title="3">{
+                errors = append(errors, ValidationError{
+                        Field:   "server.port",
+                        Message: "port must be between 1 and 65535",
+                })
+        }</span>
+
+        // Validate cron schedule if scheduling is enabled
+        <span class="cov6" title="6">if c.Server.ScheduleEnabled &amp;&amp; c.Server.Schedule == "" </span><span class="cov0" title="0">{
+                errors = append(errors, ValidationError{
+                        Field:   "server.schedule",
+                        Message: "schedule must be provided when schedule_enabled is true",
+                })
+        }</span>
+
+        <span class="cov6" title="6">if len(errors) &gt; 0 </span><span class="cov5" title="4">{
+                return errors
+        }</span>
+
+        <span class="cov3" title="2">return nil</span>
+}
+
+// contains checks if a slice contains a string
+func contains(slice []string, item string) bool <span class="cov6" title="6">{
+        for _, s := range slice </span><span class="cov9" title="14">{
+                if s == item </span><span class="cov6" title="5">{
+                        return true
+                }</span>
+        }
+        <span class="cov1" title="1">return false</span>
+}</pre>
+		
+		<pre class="file" id="file5" style="display: none">package gws
+
+import (
+        "context"
+        "encoding/json"
+        "fmt"
+        "io/ioutil"
+        "net/http"
+
+        "golang.org/x/oauth2/google"
+        "google.golang.org/api/admin/directory/v1"
+        "google.golang.org/api/googleapi"
+        "google.golang.org/api/option"
+)
+
+// Client handles Google Workspace Admin SDK operations
+type Client struct {
+        service           *admin.Service
+        domain            string
+        superAdminEmail   string
+}
+
+// User represents a Google Workspace user
+type User struct {
+        ID           string   `json:"id"`
+        PrimaryEmail string   `json:"primaryEmail"`
+        Name         UserName `json:"name"`
+        Suspended    bool     `json:"suspended"`
+        Archived     bool     `json:"archived"`
+}
+
+// UserName represents a user's name components
+type UserName struct {
+        GivenName  string `json:"givenName"`
+        FamilyName string `json:"familyName"`
+        FullName   string `json:"fullName"`
+}
+
+// Group represents a Google Workspace group
+type Group struct {
+        ID          string `json:"id"`
+        Email       string `json:"email"`
+        Name        string `json:"name"`
+        Description string `json:"description"`
+}
+
+// GroupMember represents a member of a Google Workspace group
+type GroupMember struct {
+        ID     string `json:"id"`
+        Email  string `json:"email"`
+        Role   string `json:"role"`
+        Type   string `json:"type"`
+        Status string `json:"status"`
+}
+
+// NewClient creates a new Google Workspace client
+func NewClient(serviceAccountKeyPath, domain, superAdminEmail string) (*Client, error) <span class="cov0" title="0">{
+        ctx := context.Background()
+
+        // Read service account credentials
+        credentialsJSON, err := ioutil.ReadFile(serviceAccountKeyPath)
+        if err != nil </span><span class="cov0" title="0">{
+                return nil, fmt.Errorf("failed to read service account file: %w", err)
+        }</span>
+
+        // Parse credentials to get client email
+        <span class="cov0" title="0">var creds struct {
+                ClientEmail string `json:"client_email"`
+        }
+        if err := json.Unmarshal(credentialsJSON, &amp;creds); err != nil </span><span class="cov0" title="0">{
+                return nil, fmt.Errorf("failed to parse service account credentials: %w", err)
+        }</span>
+
+        // Create JWT config for domain-wide delegation
+        <span class="cov0" title="0">config, err := google.JWTConfigFromJSON(
+                credentialsJSON,
+                admin.AdminDirectoryUserScope,
+                admin.AdminDirectoryGroupScope,
+                admin.AdminDirectoryGroupMemberScope,
+        )
+        if err != nil </span><span class="cov0" title="0">{
+                return nil, fmt.Errorf("failed to create JWT config: %w", err)
+        }</span>
+
+        // Set the subject for domain-wide delegation
+        <span class="cov0" title="0">config.Subject = superAdminEmail
+
+        // Create HTTP client
+        httpClient := config.Client(ctx)
+
+        // Create Admin SDK service
+        service, err := admin.NewService(ctx, option.WithHTTPClient(httpClient))
+        if err != nil </span><span class="cov0" title="0">{
+                return nil, fmt.Errorf("failed to create Admin SDK service: %w", err)
+        }</span>
+
+        <span class="cov0" title="0">return &amp;Client{
+                service:         service,
+                domain:          domain,
+                superAdminEmail: superAdminEmail,
+        }, nil</span>
+}
+
+// GetUsers retrieves all users in the domain
+func (c *Client) GetUsers() ([]*User, error) <span class="cov0" title="0">{
+        var allUsers []*User
+        pageToken := ""
+
+        for </span><span class="cov0" title="0">{
+                call := c.service.Users.List().Domain(c.domain).MaxResults(500)
+                if pageToken != "" </span><span class="cov0" title="0">{
+                        call = call.PageToken(pageToken)
+                }</span>
+
+                <span class="cov0" title="0">resp, err := call.Do()
+                if err != nil </span><span class="cov0" title="0">{
+                        return nil, fmt.Errorf("failed to list users: %w", err)
+                }</span>
+
+                <span class="cov0" title="0">for _, user := range resp.Users </span><span class="cov0" title="0">{
+                        allUsers = append(allUsers, &amp;User{
+                                ID:           user.Id,
+                                PrimaryEmail: user.PrimaryEmail,
+                                Name: UserName{
+                                        GivenName:  user.Name.GivenName,
+                                        FamilyName: user.Name.FamilyName,
+                                        FullName:   user.Name.FullName,
+                                },
+                                Suspended: user.Suspended,
+                                Archived:  user.Archived,
+                        })
+                }</span>
+
+                <span class="cov0" title="0">if resp.NextPageToken == "" </span><span class="cov0" title="0">{
+                        break</span>
+                }
+                <span class="cov0" title="0">pageToken = resp.NextPageToken</span>
+        }
+
+        <span class="cov0" title="0">return allUsers, nil</span>
+}
+
+// GetGroup retrieves a specific group by email
+func (c *Client) GetGroup(groupEmail string) (*Group, error) <span class="cov0" title="0">{
+        group, err := c.service.Groups.Get(groupEmail).Do()
+        if err != nil </span><span class="cov0" title="0">{
+                return nil, fmt.Errorf("failed to get group %s: %w", groupEmail, err)
+        }</span>
+
+        <span class="cov0" title="0">return &amp;Group{
+                ID:          group.Id,
+                Email:       group.Email,
+                Name:        group.Name,
+                Description: group.Description,
+        }, nil</span>
+}
+
+// GetGroupMembers retrieves all members of a group
+func (c *Client) GetGroupMembers(groupEmail string) ([]*GroupMember, error) <span class="cov0" title="0">{
+        var allMembers []*GroupMember
+        pageToken := ""
+
+        for </span><span class="cov0" title="0">{
+                call := c.service.Members.List(groupEmail).MaxResults(200)
+                if pageToken != "" </span><span class="cov0" title="0">{
+                        call = call.PageToken(pageToken)
+                }</span>
+
+                <span class="cov0" title="0">resp, err := call.Do()
+                if err != nil </span><span class="cov0" title="0">{
+                        // Handle case where group has no members
+                        if isNotFoundError(err) </span><span class="cov0" title="0">{
+                                return allMembers, nil
+                        }</span>
+                        <span class="cov0" title="0">return nil, fmt.Errorf("failed to list members for group %s: %w", groupEmail, err)</span>
+                }
+
+                <span class="cov0" title="0">for _, member := range resp.Members </span><span class="cov0" title="0">{
+                        allMembers = append(allMembers, &amp;GroupMember{
+                                ID:     member.Id,
+                                Email:  member.Email,
+                                Role:   member.Role,
+                                Type:   member.Type,
+                                Status: member.Status,
+                        })
+                }</span>
+
+                <span class="cov0" title="0">if resp.NextPageToken == "" </span><span class="cov0" title="0">{
+                        break</span>
+                }
+                <span class="cov0" title="0">pageToken = resp.NextPageToken</span>
+        }
+
+        <span class="cov0" title="0">return allMembers, nil</span>
+}
+
+// isNotFoundError checks if the error is a 404 not found error
+func isNotFoundError(err error) bool <span class="cov0" title="0">{
+        if googleErr, ok := err.(*googleapi.Error); ok </span><span class="cov0" title="0">{
+                return googleErr.Code == http.StatusNotFound
+        }</span>
+        <span class="cov0" title="0">return false</span>
+}</pre>
+		
+		<pre class="file" id="file6" style="display: none">package logger
+
+import (
+        "fmt"
+        "os"
+
+        "github.com/sirupsen/logrus"
+)
+
+// PythonCompatibleFormatter formats log messages to match Python output
+type PythonCompatibleFormatter struct{}
+
+// Format formats a logrus entry to match Python logging format
+// Python format: 2025-05-30 12:21:53,426 - INFO - Starting sync process
+func (f *PythonCompatibleFormatter) Format(entry *logrus.Entry) ([]byte, error) <span class="cov0" title="0">{
+        timestamp := entry.Time.Format("2006-01-02 15:04:05,000")
+        level := entry.Level.String()
+        message := entry.Message
+
+        // Convert level to uppercase to match Python
+        switch entry.Level </span>{
+        case logrus.DebugLevel:<span class="cov0" title="0">
+                level = "DEBUG"</span>
+        case logrus.InfoLevel:<span class="cov0" title="0">
+                level = "INFO"</span>
+        case logrus.WarnLevel:<span class="cov0" title="0">
+                level = "WARNING"</span>
+        case logrus.ErrorLevel:<span class="cov0" title="0">
+                level = "ERROR"</span>
+        case logrus.FatalLevel:<span class="cov0" title="0">
+                level = "CRITICAL"</span>
+        case logrus.PanicLevel:<span class="cov0" title="0">
+                level = "CRITICAL"</span>
+        }
+
+        <span class="cov0" title="0">formatted := fmt.Sprintf("%s - %s - %s\n", timestamp, level, message)
+        return []byte(formatted), nil</span>
+}
+
+// Setup configures the logger with Python-compatible formatting
+func Setup(logLevel string, testMode bool) *logrus.Logger <span class="cov0" title="0">{
+        logger := logrus.New()
+
+        // Set log level
+        level, err := logrus.ParseLevel(logLevel)
+        if err != nil </span><span class="cov0" title="0">{
+                level = logrus.InfoLevel
+        }</span>
+        <span class="cov0" title="0">logger.SetLevel(level)
+
+        // Use custom formatter for Python compatibility
+        logger.SetFormatter(&amp;PythonCompatibleFormatter{})
+
+        // Output to stdout (matching Python behavior)
+        logger.SetOutput(os.Stdout)
+
+        // Log startup information
+        logger.Info("Starting Google Workspace to Beyond Identity sync process")
+        
+        if testMode </span><span class="cov0" title="0">{
+                logger.Info("TEST MODE ENABLED - No actual changes will be made")
+        }</span>
+
+        <span class="cov0" title="0">return logger</span>
+}
+
+// LogProcessStart logs the start of processing with group information
+func LogProcessStart(logger *logrus.Logger, groups []string, logLevel string) <span class="cov0" title="0">{
+        if len(groups) == 1 </span><span class="cov0" title="0">{
+                logger.Infof("Configured to sync the following group: %s", groups[0])
+        }</span> else<span class="cov0" title="0"> {
+                logger.Infof("Configured to sync the following groups: %s", joinGroups(groups))
+        }</span>
+        
+        <span class="cov0" title="0">logger.Infof("Logging enabled at %s level", logLevel)</span>
+}
+
+// joinGroups joins group names with proper formatting
+func joinGroups(groups []string) string <span class="cov0" title="0">{
+        if len(groups) == 0 </span><span class="cov0" title="0">{
+                return ""
+        }</span>
+        <span class="cov0" title="0">if len(groups) == 1 </span><span class="cov0" title="0">{
+                return groups[0]
+        }</span>
+        <span class="cov0" title="0">if len(groups) == 2 </span><span class="cov0" title="0">{
+                return groups[0] + ", " + groups[1]
+        }</span>
+        
+        <span class="cov0" title="0">result := ""
+        for i, group := range groups </span><span class="cov0" title="0">{
+                if i == len(groups)-1 </span><span class="cov0" title="0">{
+                        result += ", " + group
+                }</span> else<span class="cov0" title="0"> if i == 0 </span><span class="cov0" title="0">{
+                        result = group
+                }</span> else<span class="cov0" title="0"> {
+                        result += ", " + group
+                }</span>
+        }
+        <span class="cov0" title="0">return result</span>
+}</pre>
+		
+		<pre class="file" id="file7" style="display: none">package server
+
+import (
+        "sync"
+        "time"
+
+        syncengine "github.com/gobeyondidentity/google-workspace-provisioner/internal/sync"
+)
+
+// Metrics collects and tracks synchronization metrics
+type Metrics struct {
+        mu                    sync.RWMutex
+        totalSyncs            int
+        successfulSyncs       int
+        failedSyncs           int
+        totalUsersCreated     int
+        totalUsersUpdated     int
+        totalGroupsCreated    int
+        totalGroupsProcessed  int
+        totalMembershipsAdded int
+        totalMembershipsRemoved int
+        lastSyncDuration      time.Duration
+        averageSyncDuration   time.Duration
+        lastSyncTime          *time.Time
+        lastError             error
+        uptime                time.Time
+}
+
+// MetricsStats represents the current metrics statistics
+type MetricsStats struct {
+        TotalSyncs             int           `json:"total_syncs"`
+        SuccessfulSyncs        int           `json:"successful_syncs"`
+        FailedSyncs            int           `json:"failed_syncs"`
+        SuccessRate            float64       `json:"success_rate"`
+        TotalUsersCreated      int           `json:"total_users_created"`
+        TotalUsersUpdated      int           `json:"total_users_updated"`
+        TotalGroupsCreated     int           `json:"total_groups_created"`
+        TotalGroupsProcessed   int           `json:"total_groups_processed"`
+        TotalMembershipsAdded  int           `json:"total_memberships_added"`
+        TotalMembershipsRemoved int           `json:"total_memberships_removed"`
+        LastSyncDuration       time.Duration `json:"last_sync_duration"`
+        AverageSyncDuration    time.Duration `json:"average_sync_duration"`
+        LastSyncTime           *time.Time    `json:"last_sync_time"`
+        LastError              string        `json:"last_error,omitempty"`
+        Uptime                 time.Duration `json:"uptime"`
+}
+
+// NewMetrics creates a new metrics collector
+func NewMetrics() *Metrics <span class="cov9" title="14">{
+        return &amp;Metrics{
+                uptime: time.Now(),
+        }
+}</span>
+
+// RecordSync records a successful sync operation
+func (m *Metrics) RecordSync(result *syncengine.SyncResult, duration time.Duration) <span class="cov10" title="17">{
+        m.mu.Lock()
+        defer m.mu.Unlock()
+        
+        m.totalSyncs++
+        if len(result.Errors) == 0 </span><span class="cov9" title="14">{
+                m.successfulSyncs++
+        }</span> else<span class="cov4" title="3"> {
+                m.failedSyncs++
+        }</span>
+        
+        <span class="cov10" title="17">m.totalUsersCreated += result.UsersCreated
+        m.totalUsersUpdated += result.UsersUpdated
+        m.totalGroupsCreated += result.GroupsCreated
+        m.totalGroupsProcessed += result.GroupsProcessed
+        m.totalMembershipsAdded += result.MembershipsAdded
+        m.totalMembershipsRemoved += result.MembershipsRemoved
+        
+        m.lastSyncDuration = duration
+        
+        // Calculate average duration
+        if m.totalSyncs &gt; 0 </span><span class="cov10" title="17">{
+                totalDuration := time.Duration(int64(m.averageSyncDuration) * int64(m.totalSyncs-1))
+                m.averageSyncDuration = (totalDuration + duration) / time.Duration(m.totalSyncs)
+        }</span> else<span class="cov0" title="0"> {
+                m.averageSyncDuration = duration
+        }</span>
+        
+        <span class="cov10" title="17">now := time.Now()
+        m.lastSyncTime = &amp;now
+        
+        // Clear last error on successful sync
+        if len(result.Errors) == 0 </span><span class="cov9" title="14">{
+                m.lastError = nil
+        }</span> else<span class="cov4" title="3"> if len(result.Errors) &gt; 0 </span><span class="cov4" title="3">{
+                m.lastError = result.Errors[0] // Store first error
+        }</span>
+}
+
+// RecordFailedSync records a failed sync operation
+func (m *Metrics) RecordFailedSync(err error, duration time.Duration) <span class="cov0" title="0">{
+        m.mu.Lock()
+        defer m.mu.Unlock()
+        
+        m.totalSyncs++
+        m.failedSyncs++
+        m.lastSyncDuration = duration
+        m.lastError = err
+        
+        // Calculate average duration
+        if m.totalSyncs &gt; 0 </span><span class="cov0" title="0">{
+                totalDuration := time.Duration(int64(m.averageSyncDuration) * int64(m.totalSyncs-1))
+                m.averageSyncDuration = (totalDuration + duration) / time.Duration(m.totalSyncs)
+        }</span> else<span class="cov0" title="0"> {
+                m.averageSyncDuration = duration
+        }</span>
+        
+        <span class="cov0" title="0">now := time.Now()
+        m.lastSyncTime = &amp;now</span>
+}
+
+// GetStats returns the current metrics statistics
+func (m *Metrics) GetStats() *MetricsStats <span class="cov6" title="6">{
+        m.mu.RLock()
+        defer m.mu.RUnlock()
+        
+        var successRate float64
+        if m.totalSyncs &gt; 0 </span><span class="cov4" title="3">{
+                successRate = float64(m.successfulSyncs) / float64(m.totalSyncs) * 100
+        }</span>
+        
+        <span class="cov6" title="6">var lastErrorStr string
+        if m.lastError != nil </span><span class="cov1" title="1">{
+                lastErrorStr = m.lastError.Error()
+        }</span>
+        
+        <span class="cov6" title="6">return &amp;MetricsStats{
+                TotalSyncs:              m.totalSyncs,
+                SuccessfulSyncs:         m.successfulSyncs,
+                FailedSyncs:             m.failedSyncs,
+                SuccessRate:             successRate,
+                TotalUsersCreated:       m.totalUsersCreated,
+                TotalUsersUpdated:       m.totalUsersUpdated,
+                TotalGroupsCreated:      m.totalGroupsCreated,
+                TotalGroupsProcessed:    m.totalGroupsProcessed,
+                TotalMembershipsAdded:   m.totalMembershipsAdded,
+                TotalMembershipsRemoved: m.totalMembershipsRemoved,
+                LastSyncDuration:        m.lastSyncDuration,
+                AverageSyncDuration:     m.averageSyncDuration,
+                LastSyncTime:            m.lastSyncTime,
+                LastError:               lastErrorStr,
+                Uptime:                  time.Since(m.uptime),
+        }</span>
+}
+
+// Reset resets all metrics
+func (m *Metrics) Reset() <span class="cov0" title="0">{
+        m.mu.Lock()
+        defer m.mu.Unlock()
+        
+        m.totalSyncs = 0
+        m.successfulSyncs = 0
+        m.failedSyncs = 0
+        m.totalUsersCreated = 0
+        m.totalUsersUpdated = 0
+        m.totalGroupsCreated = 0
+        m.totalGroupsProcessed = 0
+        m.totalMembershipsAdded = 0
+        m.totalMembershipsRemoved = 0
+        m.lastSyncDuration = 0
+        m.averageSyncDuration = 0
+        m.lastSyncTime = nil
+        m.lastError = nil
+        m.uptime = time.Now()
+}</pre>
+		
+		<pre class="file" id="file8" style="display: none">package server
+
+import (
+        "fmt"
+        "sync"
+        "time"
+
+        "github.com/robfig/cron/v3"
+        "github.com/sirupsen/logrus"
+        syncengine "github.com/gobeyondidentity/google-workspace-provisioner/internal/sync"
+)
+
+// Scheduler handles scheduled sync operations
+type Scheduler struct {
+        cron       *cron.Cron
+        schedule   string
+        syncEngine *syncengine.Engine
+        logger     *logrus.Logger
+        metrics    *Metrics
+        mu         sync.RWMutex
+        running    bool
+        lastSync   *time.Time
+        nextSync   *time.Time
+}
+
+// NewScheduler creates a new scheduler
+func NewScheduler(schedule string, syncEngine *syncengine.Engine, logger *logrus.Logger, metrics *Metrics) *Scheduler <span class="cov0" title="0">{
+        // Create cron with logging
+        c := cron.New(cron.WithLogger(cron.VerbosePrintfLogger(logger)))
+        
+        return &amp;Scheduler{
+                cron:       c,
+                schedule:   schedule,
+                syncEngine: syncEngine,
+                logger:     logger,
+                metrics:    metrics,
+        }
+}</span>
+
+// Start starts the scheduler
+func (s *Scheduler) Start() error <span class="cov0" title="0">{
+        s.mu.Lock()
+        defer s.mu.Unlock()
+        
+        if s.running </span><span class="cov0" title="0">{
+                return fmt.Errorf("scheduler is already running")
+        }</span>
+        
+        // Add the sync job
+        <span class="cov0" title="0">entryID, err := s.cron.AddFunc(s.schedule, s.runSync)
+        if err != nil </span><span class="cov0" title="0">{
+                return fmt.Errorf("failed to add cron job: %w", err)
+        }</span>
+        
+        // Start the cron scheduler
+        <span class="cov0" title="0">s.cron.Start()
+        s.running = true
+        
+        // Calculate next sync time
+        entries := s.cron.Entries()
+        if len(entries) &gt; 0 </span><span class="cov0" title="0">{
+                nextTime := entries[0].Next
+                s.nextSync = &amp;nextTime
+        }</span>
+        
+        <span class="cov0" title="0">s.logger.Infof("Scheduler started with schedule '%s' (entry ID: %d)", s.schedule, entryID)
+        if s.nextSync != nil </span><span class="cov0" title="0">{
+                s.logger.Infof("Next sync scheduled for: %s", s.nextSync.Format(time.RFC3339))
+        }</span>
+        
+        <span class="cov0" title="0">return nil</span>
+}
+
+// Stop stops the scheduler
+func (s *Scheduler) Stop() <span class="cov0" title="0">{
+        s.mu.Lock()
+        defer s.mu.Unlock()
+        
+        if !s.running </span><span class="cov0" title="0">{
+                return
+        }</span>
+        
+        // Stop the cron scheduler and wait for running jobs to complete
+        <span class="cov0" title="0">ctx := s.cron.Stop()
+        &lt;-ctx.Done()
+        
+        s.running = false
+        s.nextSync = nil
+        
+        s.logger.Info("Scheduler stopped")</span>
+}
+
+// IsRunning returns whether the scheduler is currently running
+func (s *Scheduler) IsRunning() bool <span class="cov0" title="0">{
+        s.mu.RLock()
+        defer s.mu.RUnlock()
+        return s.running
+}</span>
+
+// GetLastSync returns the time of the last sync operation
+func (s *Scheduler) GetLastSync() *time.Time <span class="cov0" title="0">{
+        s.mu.RLock()
+        defer s.mu.RUnlock()
+        return s.lastSync
+}</span>
+
+// GetNextSync returns the time of the next scheduled sync
+func (s *Scheduler) GetNextSync() *time.Time <span class="cov0" title="0">{
+        s.mu.RLock()
+        defer s.mu.RUnlock()
+        
+        if !s.running </span><span class="cov0" title="0">{
+                return nil
+        }</span>
+        
+        // Get the latest next time from cron entries
+        <span class="cov0" title="0">entries := s.cron.Entries()
+        if len(entries) &gt; 0 </span><span class="cov0" title="0">{
+                nextTime := entries[0].Next
+                return &amp;nextTime
+        }</span>
+        
+        <span class="cov0" title="0">return s.nextSync</span>
+}
+
+// runSync executes a sync operation (called by cron)
+func (s *Scheduler) runSync() <span class="cov0" title="0">{
+        s.logger.Info("Starting scheduled sync operation")
+        
+        startTime := time.Now()
+        result, err := s.syncEngine.Sync()
+        duration := time.Since(startTime)
+        
+        // Update last sync time
+        s.mu.Lock()
+        s.lastSync = &amp;startTime
+        
+        // Update next sync time
+        entries := s.cron.Entries()
+        if len(entries) &gt; 0 </span><span class="cov0" title="0">{
+                nextTime := entries[0].Next
+                s.nextSync = &amp;nextTime
+        }</span>
+        <span class="cov0" title="0">s.mu.Unlock()
+        
+        if err != nil </span><span class="cov0" title="0">{
+                s.logger.Errorf("Scheduled sync failed: %v", err)
+                s.metrics.RecordFailedSync(err, duration)
+        }</span> else<span class="cov0" title="0"> {
+                s.logger.Infof("Scheduled sync completed successfully in %v", duration)
+                s.metrics.RecordSync(result, duration)
+                
+                // Log summary
+                if len(result.Errors) &gt; 0 </span><span class="cov0" title="0">{
+                        s.logger.Warnf("Scheduled sync completed with %d errors", len(result.Errors))
+                }</span>
+        }
+}</pre>
+		
+		<pre class="file" id="file9" style="display: none">package server
+
+import (
+        "context"
+        "encoding/json"
+        "fmt"
+        "net/http"
+        "os"
+        "os/signal"
+        "syscall"
+        "time"
+
+        "github.com/gorilla/mux"
+        "github.com/sirupsen/logrus"
+        "github.com/gobeyondidentity/google-workspace-provisioner/internal/config"
+        syncengine "github.com/gobeyondidentity/google-workspace-provisioner/internal/sync"
+        "github.com/gobeyondidentity/google-workspace-provisioner/internal/gws"
+        "github.com/gobeyondidentity/google-workspace-provisioner/internal/bi"
+)
+
+// Server represents the HTTP server for SCIM sync operations
+type Server struct {
+        httpServer *http.Server
+        logger     *logrus.Logger
+        config     *config.Config
+        syncEngine SyncEngine
+        scheduler  *Scheduler
+        metrics    *Metrics
+}
+
+// HealthResponse represents the health check response
+type HealthResponse struct {
+        Status      string            `json:"status"`
+        Version     string            `json:"version"`
+        Timestamp   time.Time         `json:"timestamp"`
+        Services    map[string]string `json:"services"`
+        LastSync    *time.Time        `json:"last_sync,omitempty"`
+        NextSync    *time.Time        `json:"next_sync,omitempty"`
+        SyncEnabled bool              `json:"sync_enabled"`
+}
+
+// SyncResponse represents the manual sync response
+type SyncResponse struct {
+        Status    string     `json:"status"`
+        Message   string     `json:"message"`
+        Timestamp time.Time  `json:"timestamp"`
+        Result    *SyncStats `json:"result,omitempty"`
+        Error     string     `json:"error,omitempty"`
+}
+
+// SyncStats represents synchronization statistics
+type SyncStats struct {
+        GroupsProcessed    int           `json:"groups_processed"`
+        UsersCreated       int           `json:"users_created"`
+        UsersUpdated       int           `json:"users_updated"`
+        GroupsCreated      int           `json:"groups_created"`
+        MembershipsAdded   int           `json:"memberships_added"`
+        MembershipsRemoved int           `json:"memberships_removed"`
+        Duration           time.Duration `json:"duration"`
+        Errors             []string      `json:"errors"`
+}
+
+// NewServer creates a new HTTP server instance
+func NewServer(cfg *config.Config, logger *logrus.Logger) (*Server, error) <span class="cov0" title="0">{
+        // Create Google Workspace client
+        gwsClient, err := gws.NewClient(
+                cfg.GoogleWorkspace.ServiceAccountKeyPath,
+                cfg.GoogleWorkspace.Domain,
+                cfg.GoogleWorkspace.SuperAdminEmail,
+        )
+        if err != nil </span><span class="cov0" title="0">{
+                return nil, fmt.Errorf("failed to create Google Workspace client: %w", err)
+        }</span>
+
+        // Create Beyond Identity client
+        <span class="cov0" title="0">biClient := bi.NewClient(cfg.BeyondIdentity.APIToken, cfg.BeyondIdentity.SCIMBaseURL)
+
+        // Create sync engine
+        syncEngine := syncengine.NewEngine(gwsClient, biClient, cfg, logger)
+
+        // Create metrics collector
+        metrics := NewMetrics()
+
+        // Create scheduler if scheduling is enabled
+        var scheduler *Scheduler
+        if cfg.Server.ScheduleEnabled </span><span class="cov0" title="0">{
+                scheduler = NewScheduler(cfg.Server.Schedule, syncEngine, logger, metrics)
+        }</span>
+
+        // Create router
+        <span class="cov0" title="0">router := mux.NewRouter()
+        
+        server := &amp;Server{
+                logger:     logger,
+                config:     cfg,
+                syncEngine: syncEngine,
+                scheduler:  scheduler,
+                metrics:    metrics,
+        }
+
+        // Register routes
+        server.registerRoutes(router)
+
+        // Create HTTP server
+        httpServer := &amp;http.Server{
+                Addr:         fmt.Sprintf(":%d", cfg.Server.Port),
+                Handler:      router,
+                ReadTimeout:  30 * time.Second,
+                WriteTimeout: 30 * time.Second,
+                IdleTimeout:  60 * time.Second,
+        }
+
+        server.httpServer = httpServer
+
+        return server, nil</span>
+}
+
+// registerRoutes sets up HTTP endpoints
+func (s *Server) registerRoutes(router *mux.Router) <span class="cov10" title="8">{
+        // Health check endpoint
+        router.HandleFunc("/health", s.handleHealth).Methods("GET")
+        
+        // Manual sync endpoint
+        router.HandleFunc("/sync", s.handleSync).Methods("POST")
+        
+        // Metrics endpoint
+        router.HandleFunc("/metrics", s.handleMetrics).Methods("GET")
+        
+        // Scheduler control endpoints
+        if s.scheduler != nil </span><span class="cov0" title="0">{
+                router.HandleFunc("/scheduler/start", s.handleSchedulerStart).Methods("POST")
+                router.HandleFunc("/scheduler/stop", s.handleSchedulerStop).Methods("POST")
+                router.HandleFunc("/scheduler/status", s.handleSchedulerStatus).Methods("GET")
+        }</span>
+
+        // Version endpoint
+        <span class="cov10" title="8">router.HandleFunc("/version", s.handleVersion).Methods("GET")</span>
+}
+
+// Start starts the HTTP server and scheduler
+func (s *Server) Start() error <span class="cov0" title="0">{
+        s.logger.Infof("Starting SCIM sync server on port %d", s.config.Server.Port)
+
+        // Start scheduler if enabled
+        if s.scheduler != nil </span><span class="cov0" title="0">{
+                if err := s.scheduler.Start(); err != nil </span><span class="cov0" title="0">{
+                        return fmt.Errorf("failed to start scheduler: %w", err)
+                }</span>
+                <span class="cov0" title="0">s.logger.Info("Scheduler started successfully")</span>
+        }
+
+        // Start HTTP server in a goroutine
+        <span class="cov0" title="0">go func() </span><span class="cov0" title="0">{
+                if err := s.httpServer.ListenAndServe(); err != nil &amp;&amp; err != http.ErrServerClosed </span><span class="cov0" title="0">{
+                        s.logger.Errorf("HTTP server error: %v", err)
+                }</span>
+        }()
+
+        <span class="cov0" title="0">s.logger.Info("SCIM sync server started successfully")
+        
+        // Wait for shutdown signal
+        s.waitForShutdown()
+        
+        return nil</span>
+}
+
+// waitForShutdown waits for termination signals and performs graceful shutdown
+func (s *Server) waitForShutdown() <span class="cov0" title="0">{
+        sigChan := make(chan os.Signal, 1)
+        signal.Notify(sigChan, syscall.SIGINT, syscall.SIGTERM)
+        
+        sig := &lt;-sigChan
+        s.logger.Infof("Received signal %s, starting graceful shutdown...", sig)
+        
+        // Stop scheduler
+        if s.scheduler != nil </span><span class="cov0" title="0">{
+                s.scheduler.Stop()
+                s.logger.Info("Scheduler stopped")
+        }</span>
+        
+        // Stop HTTP server
+        <span class="cov0" title="0">ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+        defer cancel()
+        
+        if err := s.httpServer.Shutdown(ctx); err != nil </span><span class="cov0" title="0">{
+                s.logger.Errorf("HTTP server shutdown error: %v", err)
+        }</span> else<span class="cov0" title="0"> {
+                s.logger.Info("HTTP server stopped gracefully")
+        }</span>
+}
+
+// handleHealth handles health check requests
+func (s *Server) handleHealth(w http.ResponseWriter, r *http.Request) <span class="cov1" title="1">{
+        services := make(map[string]string)
+        
+        // Check Google Workspace connectivity (simplified check)
+        services["google_workspace"] = "ok"
+        
+        // Check Beyond Identity connectivity (simplified check)
+        services["beyond_identity"] = "ok"
+        
+        response := HealthResponse{
+                Status:      "healthy",
+                Version:     "0.1.0",
+                Timestamp:   time.Now(),
+                Services:    services,
+                SyncEnabled: s.scheduler != nil,
+        }
+        
+        // Add scheduler info if available
+        if s.scheduler != nil </span><span class="cov0" title="0">{
+                if lastSync := s.scheduler.GetLastSync(); lastSync != nil </span><span class="cov0" title="0">{
+                        response.LastSync = lastSync
+                }</span>
+                <span class="cov0" title="0">if nextSync := s.scheduler.GetNextSync(); nextSync != nil </span><span class="cov0" title="0">{
+                        response.NextSync = nextSync
+                }</span>
+        }
+        
+        <span class="cov1" title="1">w.Header().Set("Content-Type", "application/json")
+        json.NewEncoder(w).Encode(response)</span>
+}
+
+// handleSync handles manual sync requests
+func (s *Server) handleSync(w http.ResponseWriter, r *http.Request) <span class="cov4" title="2">{
+        s.logger.Info("Manual sync requested via API")
+        
+        startTime := time.Now()
+        result, err := s.syncEngine.Sync()
+        duration := time.Since(startTime)
+        
+        response := SyncResponse{
+                Timestamp: time.Now(),
+        }
+        
+        if err != nil </span><span class="cov1" title="1">{
+                s.logger.Errorf("Manual sync failed: %v", err)
+                response.Status = "error"
+                response.Message = "Sync operation failed"
+                response.Error = err.Error()
+                w.WriteHeader(http.StatusInternalServerError)
+        }</span> else<span class="cov1" title="1"> {
+                s.logger.Info("Manual sync completed successfully")
+                response.Status = "success"
+                response.Message = "Sync operation completed"
+                response.Result = &amp;SyncStats{
+                        GroupsProcessed:    result.GroupsProcessed,
+                        UsersCreated:       result.UsersCreated,
+                        UsersUpdated:       result.UsersUpdated,
+                        GroupsCreated:      result.GroupsCreated,
+                        MembershipsAdded:   result.MembershipsAdded,
+                        MembershipsRemoved: result.MembershipsRemoved,
+                        Duration:           duration,
+                        Errors:             errorStrings(result.Errors),
+                }
+                
+                // Update metrics
+                s.metrics.RecordSync(result, duration)
+        }</span>
+        
+        <span class="cov4" title="2">w.Header().Set("Content-Type", "application/json")
+        json.NewEncoder(w).Encode(response)</span>
+}
+
+// handleMetrics handles metrics requests
+func (s *Server) handleMetrics(w http.ResponseWriter, r *http.Request) <span class="cov1" title="1">{
+        w.Header().Set("Content-Type", "application/json")
+        json.NewEncoder(w).Encode(s.metrics.GetStats())
+}</span>
+
+// handleSchedulerStart handles scheduler start requests
+func (s *Server) handleSchedulerStart(w http.ResponseWriter, r *http.Request) <span class="cov0" title="0">{
+        if s.scheduler == nil </span><span class="cov0" title="0">{
+                http.Error(w, "Scheduler not configured", http.StatusBadRequest)
+                return
+        }</span>
+        
+        <span class="cov0" title="0">if err := s.scheduler.Start(); err != nil </span><span class="cov0" title="0">{
+                http.Error(w, fmt.Sprintf("Failed to start scheduler: %v", err), http.StatusInternalServerError)
+                return
+        }</span>
+        
+        <span class="cov0" title="0">s.logger.Info("Scheduler started via API")
+        w.WriteHeader(http.StatusOK)
+        json.NewEncoder(w).Encode(map[string]string{"status": "started"})</span>
+}
+
+// handleSchedulerStop handles scheduler stop requests
+func (s *Server) handleSchedulerStop(w http.ResponseWriter, r *http.Request) <span class="cov0" title="0">{
+        if s.scheduler == nil </span><span class="cov0" title="0">{
+                http.Error(w, "Scheduler not configured", http.StatusBadRequest)
+                return
+        }</span>
+        
+        <span class="cov0" title="0">s.scheduler.Stop()
+        s.logger.Info("Scheduler stopped via API")
+        
+        w.WriteHeader(http.StatusOK)
+        json.NewEncoder(w).Encode(map[string]string{"status": "stopped"})</span>
+}
+
+// handleSchedulerStatus handles scheduler status requests
+func (s *Server) handleSchedulerStatus(w http.ResponseWriter, r *http.Request) <span class="cov0" title="0">{
+        if s.scheduler == nil </span><span class="cov0" title="0">{
+                http.Error(w, "Scheduler not configured", http.StatusBadRequest)
+                return
+        }</span>
+        
+        <span class="cov0" title="0">status := map[string]interface{}{
+                "running":   s.scheduler.IsRunning(),
+                "schedule":  s.config.Server.Schedule,
+                "last_sync": s.scheduler.GetLastSync(),
+                "next_sync": s.scheduler.GetNextSync(),
+        }
+        
+        w.Header().Set("Content-Type", "application/json")
+        json.NewEncoder(w).Encode(status)</span>
+}
+
+// handleVersion handles version requests
+func (s *Server) handleVersion(w http.ResponseWriter, r *http.Request) <span class="cov1" title="1">{
+        version := map[string]string{
+                "version":    "0.1.0",
+                "build_time": time.Now().Format(time.RFC3339),
+                "mode":       "server",
+        }
+        
+        w.Header().Set("Content-Type", "application/json")
+        json.NewEncoder(w).Encode(version)
+}</span>
+
+// errorStrings converts a slice of errors to a slice of strings
+func errorStrings(errors []error) []string <span class="cov7" title="5">{
+        if len(errors) == 0 </span><span class="cov5" title="3">{
+                return nil
+        }</span>
+        
+        <span class="cov4" title="2">result := make([]string, len(errors))
+        for i, err := range errors </span><span class="cov5" title="3">{
+                result[i] = err.Error()
+        }</span>
+        <span class="cov4" title="2">return result</span>
+}</pre>
+		
+		<pre class="file" id="file10" style="display: none">package setup
+
+import (
+        "fmt"
+        "os"
+        "path/filepath"
+)
+
+// GenerateDocumentation creates setup documentation files
+func GenerateDocumentation(outputDir string) error <span class="cov0" title="0">{
+        if err := os.MkdirAll(outputDir, 0755); err != nil </span><span class="cov0" title="0">{
+                return fmt.Errorf("failed to create output directory: %w", err)
+        }</span>
+
+        // Generate setup guide
+        <span class="cov0" title="0">if err := generateSetupGuide(filepath.Join(outputDir, "SETUP.md")); err != nil </span><span class="cov0" title="0">{
+                return err
+        }</span>
+
+        // Generate API documentation
+        <span class="cov0" title="0">if err := generateAPIGuide(filepath.Join(outputDir, "API.md")); err != nil </span><span class="cov0" title="0">{
+                return err
+        }</span>
+
+        // Generate troubleshooting guide
+        <span class="cov0" title="0">if err := generateTroubleshootingGuide(filepath.Join(outputDir, "TROUBLESHOOTING.md")); err != nil </span><span class="cov0" title="0">{
+                return err
+        }</span>
+
+        <span class="cov0" title="0">fmt.Printf("✅ Documentation generated in %s\n", outputDir)
+        return nil</span>
+}
+
+func generateSetupGuide(path string) error <span class="cov0" title="0">{
+        content := `# Go SCIM Sync Setup Guide
+
+## Quick Start
+
+### 1. Run the Setup Wizard
+The easiest way to get started is using the interactive setup wizard:
+
+` + "```bash" + `
+./scim-sync setup wizard
+` + "```" + `
+
+This will guide you through:
+- Application configuration (log level, test mode)
+- Google Workspace setup (domain, admin email, service account)
+- Beyond Identity configuration (API token, endpoints)
+- Sync settings (groups to sync, retry configuration)
+- Server mode settings (port, scheduling)
+
+### 2. Validate Setup
+Test your configuration:
+
+` + "```bash" + `
+./scim-sync setup validate
+` + "```" + `
+
+### 3. Run Your First Sync
+Execute a one-time sync:
+
+` + "```bash" + `
+./scim-sync run
+` + "```" + `
+
+### 4. Start Server Mode (Optional)
+For continuous operation with HTTP API:
+
+` + "```bash" + `
+./scim-sync server
+` + "```" + `
+
+## Manual Configuration
+
+If you prefer to create the configuration manually, create a ` + "`config.yaml`" + ` file:
+
+` + "```yaml" + `
+# Application settings
+app:
+  log_level: "info"
+  test_mode: true
+
+# Google Workspace configuration
+google_workspace:
+  domain: "yourcompany.com"
+  super_admin_email: "admin@yourcompany.com"
+  service_account_key_path: "./service-account.json"
+
+# Beyond Identity configuration  
+beyond_identity:
+  api_token: "your-beyond-identity-api-token"
+  scim_base_url: "https://api.byndid.com/scim/v2"
+  native_api_url: "https://api.byndid.com/v2"
+  group_prefix: "GoogleSCIM_"
+
+# Synchronization settings
+sync:
+  groups:
+    - "engineering@yourcompany.com"
+    - "sales@yourcompany.com"
+  retry_attempts: 3
+  retry_delay_seconds: 30
+
+# Server mode settings
+server:
+  port: 8080
+  schedule_enabled: false
+  schedule: "0 */6 * * *"
+` + "```" + `
+
+## Prerequisites
+
+### Google Workspace Setup
+
+1. **Create a Google Cloud Project**
+   - Go to [Google Cloud Console](https://console.cloud.google.com)
+   - Create a new project or select existing one
+
+2. **Enable Admin SDK API**
+   - Navigate to APIs &amp; Services &gt; Library
+   - Search for "Admin SDK API"
+   - Enable the API
+
+3. **Create Service Account**
+   - Go to APIs &amp; Services &gt; Credentials
+   - Click "Create Credentials" &gt; "Service Account"
+   - Fill in the details and create
+
+4. **Generate Service Account Key**
+   - Click on your service account
+   - Go to "Keys" tab
+   - Click "Add Key" &gt; "Create new key"
+   - Choose JSON format and download
+
+5. **Enable Domain-wide Delegation**
+   - In service account settings, check "Enable domain-wide delegation"
+   - Note the Client ID for the next step
+
+6. **Configure Domain-wide Delegation in Google Workspace**
+   - Go to [Google Admin Console](https://admin.google.com)
+   - Navigate to Security &gt; API Controls &gt; Domain-wide Delegation
+   - Add new API client with:
+     - Client ID: (from service account)
+     - OAuth Scopes: 
+       - ` + "`https://www.googleapis.com/auth/admin.directory.user`" + `
+       - ` + "`https://www.googleapis.com/auth/admin.directory.group`" + `
+       - ` + "`https://www.googleapis.com/auth/admin.directory.group.member`" + `
+
+### Beyond Identity Setup
+
+1. **Get API Token**
+   - Log into Beyond Identity Admin Console
+   - Navigate to Applications &gt; API Tokens
+   - Create new token with SCIM permissions
+
+2. **Note Your SCIM Endpoint**
+   - Typically: ` + "`https://api.byndid.com/scim/v2`" + `
+   - Check your tenant configuration if different
+
+## Security Best Practices
+
+1. **Configuration Security**
+   - Never commit API tokens to version control
+   - Store config.yaml securely with appropriate file permissions
+   - Consider using encrypted storage for production deployments
+
+2. **Service Account Security**
+   - Store service account files securely
+   - Use minimal required permissions
+   - Rotate keys regularly
+
+3. **Test Mode**
+   - Always test with ` + "`test_mode: true`" + ` first
+   - Validate sync results before enabling actual changes
+
+4. **Monitoring**
+   - Use server mode for monitoring and metrics
+   - Set up alerts for sync failures
+   - Monitor API rate limits
+
+## Common Configurations
+
+### Development Setup
+` + "```yaml" + `
+app:
+  log_level: "debug"
+  test_mode: true
+
+server:
+  schedule_enabled: false  # Manual sync only
+` + "```" + `
+
+### Production Setup
+` + "```yaml" + `
+app:
+  log_level: "info"
+  test_mode: false
+
+server:
+  schedule_enabled: true
+  schedule: "0 */6 * * *"  # Every 6 hours
+` + "```" + `
+
+### High-frequency Sync
+` + "```yaml" + `
+server:
+  schedule_enabled: true
+  schedule: "0 */1 * * *"  # Every hour
+
+sync:
+  retry_attempts: 5
+  retry_delay_seconds: 60
+` + "```" + `
+`
+
+        return os.WriteFile(path, []byte(content), 0644)
+}</span>
+
+func generateAPIGuide(path string) error <span class="cov0" title="0">{
+        content := `# Go SCIM Sync API Reference
+
+When running in server mode (` + "`./scim-sync server`" + `), the application provides an HTTP API for management and monitoring.
+
+## Base URL
+
+By default, the server runs on port 8080:
+` + "```" + `
+http://localhost:8080
+` + "```" + `
+
+## Endpoints
+
+### Health Check
+` + "```http" + `
+GET /health
+` + "```" + `
+
+Returns server health status and next scheduled sync time.
+
+**Response Example:**
+` + "```json" + `
+{
+  "status": "healthy",
+  "version": "0.1.0",
+  "timestamp": "2024-01-15T10:30:00Z",
+  "services": {
+    "google_workspace": "ok",
+    "beyond_identity": "ok"
+  },
+  "last_sync": "2024-01-15T10:00:00Z",
+  "next_sync": "2024-01-15T16:00:00Z",
+  "sync_enabled": true
+}
+` + "```" + `
+
+### Manual Sync
+` + "```http" + `
+POST /sync
+` + "```" + `
+
+Triggers a manual synchronization operation.
+
+**Response Example:**
+` + "```json" + `
+{
+  "status": "success",
+  "message": "Sync operation completed",
+  "timestamp": "2024-01-15T10:30:00Z",
+  "result": {
+    "groups_processed": 3,
+    "users_created": 5,
+    "users_updated": 2,
+    "groups_created": 1,
+    "memberships_added": 7,
+    "memberships_removed": 1,
+    "duration": 5420000000,
+    "errors": null
+  }
+}
+` + "```" + `
+
+### Metrics
+` + "```http" + `
+GET /metrics
+` + "```" + `
+
+Returns synchronization metrics and statistics.
+
+**Response Example:**
+` + "```json" + `
+{
+  "total_syncs": 25,
+  "successful_syncs": 24,
+  "failed_syncs": 1,
+  "success_rate": 96.0,
+  "total_users_created": 150,
+  "total_users_updated": 45,
+  "total_groups_created": 8,
+  "total_groups_processed": 75,
+  "total_memberships_added": 200,
+  "total_memberships_removed": 15,
+  "last_sync_duration": 5420000000,
+  "average_sync_duration": 4890000000,
+  "last_sync_time": "2024-01-15T10:00:00Z",
+  "uptime": 86400000000000
+}
+` + "```" + `
+
+### Version Information
+` + "```http" + `
+GET /version
+` + "```" + `
+
+Returns application version information.
+
+**Response Example:**
+` + "```json" + `
+{
+  "version": "0.1.0",
+  "build_time": "2024-01-15T08:00:00Z",
+  "mode": "server"
+}
+` + "```" + `
+
+### Scheduler Control
+
+#### Start Scheduler
+` + "```http" + `
+POST /scheduler/start
+` + "```" + `
+
+Starts the automatic sync scheduler (if configured).
+
+#### Stop Scheduler
+` + "```http" + `
+POST /scheduler/stop
+` + "```" + `
+
+Stops the automatic sync scheduler.
+
+#### Scheduler Status
+` + "```http" + `
+GET /scheduler/status
+` + "```" + `
+
+Returns scheduler status and configuration.
+
+**Response Example:**
+` + "```json" + `
+{
+  "running": true,
+  "schedule": "0 */6 * * *",
+  "last_sync": "2024-01-15T10:00:00Z",
+  "next_sync": "2024-01-15T16:00:00Z"
+}
+` + "```" + `
+
+## Error Responses
+
+All endpoints return appropriate HTTP status codes:
+
+- ` + "`200`" + ` - Success
+- ` + "`400`" + ` - Bad Request
+- ` + "`500`" + ` - Internal Server Error
+
+Error response format:
+` + "```json" + `
+{
+  "error": "Error description",
+  "details": "Additional error details if available"
+}
+` + "```" + `
+
+## cURL Examples
+
+### Check Health
+` + "```bash" + `
+curl http://localhost:8080/health
+` + "```" + `
+
+### Trigger Manual Sync
+` + "```bash" + `
+curl -X POST http://localhost:8080/sync
+` + "```" + `
+
+### Get Metrics
+` + "```bash" + `
+curl http://localhost:8080/metrics
+` + "```" + `
+
+### Control Scheduler
+` + "```bash" + `
+# Start scheduler
+curl -X POST http://localhost:8080/scheduler/start
+
+# Stop scheduler  
+curl -X POST http://localhost:8080/scheduler/stop
+
+# Check status
+curl http://localhost:8080/scheduler/status
+` + "```" + `
+
+## Monitoring Integration
+
+The metrics endpoint provides data suitable for monitoring systems like Prometheus, Grafana, or custom dashboards.
+
+Key metrics to monitor:
+- ` + "`success_rate`" + ` - Overall sync success rate
+- ` + "`last_sync_time`" + ` - When the last sync occurred
+- ` + "`failed_syncs`" + ` - Number of failed synchronizations
+- ` + "`average_sync_duration`" + ` - Performance trending
+
+## Rate Limiting
+
+The API does not implement rate limiting by default. Consider adding a reverse proxy (nginx, Apache) for production deployments if rate limiting is needed.
+`
+
+        return os.WriteFile(path, []byte(content), 0644)
+}</span>
+
+func generateTroubleshootingGuide(path string) error <span class="cov0" title="0">{
+        content := `# Go SCIM Sync Troubleshooting Guide
+
+## Common Issues and Solutions
+
+### Configuration Issues
+
+#### "Configuration validation failed"
+**Symptoms:** Validation errors when running ` + "`setup validate`" + ` or starting the application.
+
+**Solutions:**
+1. Run the setup wizard again: ` + "`./scim-sync setup wizard`" + `
+2. Check required fields in ` + "`config.yaml`" + `
+3. Ensure all file paths are correct and accessible
+
+#### "Service account file not found"
+**Symptoms:** Error about missing service account JSON file.
+
+**Solutions:**
+1. Verify the file path in your configuration
+2. Check file permissions (should be readable)
+3. Use absolute paths if relative paths cause issues
+4. Re-download the service account key from Google Cloud Console
+
+### Authentication Issues
+
+#### "Beyond Identity API token not set in config.yaml"
+**Symptoms:** Error when trying to connect to Beyond Identity API.
+
+**Solutions:**
+1. Set the API token in your config.yaml file under beyond_identity.api_token
+2. Run the setup wizard again: ` + "`./scim-sync setup wizard`" + `
+3. Verify the token is valid and has SCIM permissions
+
+#### "Authentication failed" with Beyond Identity
+**Symptoms:** 401 Unauthorized errors when accessing Beyond Identity API.
+
+**Solutions:**
+1. Verify your API token is correct
+2. Check token permissions in Beyond Identity Admin Console
+3. Ensure token hasn't expired
+4. Try generating a new API token
+
+#### "Domain-wide delegation" errors with Google Workspace
+**Symptoms:** OAuth errors when accessing Google Workspace APIs.
+
+**Solutions:**
+1. Verify domain-wide delegation is enabled for your service account
+2. Check OAuth scopes in Google Admin Console:
+   - ` + "`https://www.googleapis.com/auth/admin.directory.user`" + `
+   - ` + "`https://www.googleapis.com/auth/admin.directory.group`" + `
+   - ` + "`https://www.googleapis.com/auth/admin.directory.group.member`" + `
+3. Ensure the Client ID matches your service account
+4. Wait a few minutes for changes to propagate
+
+### Sync Issues
+
+#### "Group not found" errors
+**Symptoms:** 404 errors when trying to sync specific groups.
+
+**Solutions:**
+1. Verify group email addresses are correct
+2. Check that groups exist in Google Workspace
+3. Ensure the service account has access to the groups
+4. Remove non-existent groups from configuration
+
+#### "The authorization token is missing required scopes"
+**Symptoms:** 403 errors from Beyond Identity API.
+
+**Solutions:**
+1. Regenerate API token with proper SCIM permissions
+2. Check Beyond Identity Admin Console for required scopes
+3. Contact Beyond Identity support if scope issues persist
+
+#### Sync takes too long or times out
+**Symptoms:** Sync operations hang or timeout.
+
+**Solutions:**
+1. Reduce the number of groups in configuration
+2. Increase retry delay: ` + "`retry_delay_seconds: 60`" + `
+3. Check network connectivity to both APIs
+4. Monitor API rate limits and adjust sync frequency
+
+### Server Mode Issues
+
+#### "Port already in use"
+**Symptoms:** Cannot start server mode due to port conflicts.
+
+**Solutions:**
+1. Change port in configuration: ` + "`server.port: 8081`" + `
+2. Kill processes using the port: ` + "`lsof -ti:8080 | xargs kill`" + `
+3. Use a different port number
+
+#### Scheduler not running
+**Symptoms:** Automatic syncs not occurring as scheduled.
+
+**Solutions:**
+1. Verify ` + "`schedule_enabled: true`" + ` in configuration
+2. Check cron schedule syntax
+3. Look for scheduler errors in logs
+4. Restart the server
+
+### Performance Issues
+
+#### High memory usage
+**Symptoms:** Application uses excessive memory.
+
+**Solutions:**
+1. Reduce the number of groups being synced
+2. Increase ` + "`retry_delay_seconds`" + ` to reduce API pressure
+3. Monitor for memory leaks and restart periodically
+
+#### Slow sync performance
+**Symptoms:** Syncs take much longer than expected.
+
+**Solutions:**
+1. Check network latency to APIs
+2. Reduce log level to ` + "`warn`" + ` or ` + "`error`" + `
+3. Monitor API rate limits
+4. Consider syncing fewer groups per operation
+
+### Logging and Debugging
+
+#### Enable Debug Logging
+Add to your configuration:
+` + "```yaml" + `
+app:
+  log_level: "debug"
+` + "```" + `
+
+#### Trace API Calls
+For detailed API debugging, you can set environment variables:
+` + "```bash" + `
+export GODEBUG=http2debug=1
+` + "```" + `
+
+#### Log File Analysis
+Look for these patterns in logs:
+- ` + "`ERROR`" + ` - Critical issues requiring immediate attention
+- ` + "`WARNING`" + ` - Issues that may affect sync quality
+- ` + "`Failed to`" + ` - Operation failures
+- ` + "`401`" + ` or ` + "`403`" + ` - Authentication/authorization issues
+
+### Environment-Specific Issues
+
+#### Docker/Container Issues
+**Symptoms:** Application works locally but fails in containers.
+
+**Solutions:**
+1. Ensure environment variables are passed to container
+2. Mount configuration files and service account keys properly
+3. Check container networking for API access
+4. Verify file permissions in container
+
+#### Network/Firewall Issues
+**Symptoms:** Cannot connect to Google or Beyond Identity APIs.
+
+**Solutions:**
+1. Check firewall rules for outbound HTTPS (443)
+2. Verify DNS resolution for API endpoints
+3. Test connectivity: ` + "`curl https://api.byndid.com`" + `
+4. Configure proxy settings if required
+
+### Getting Help
+
+#### Validation Command
+Always start troubleshooting with:
+` + "```bash" + `
+./scim-sync setup validate
+` + "```" + `
+
+#### Collect Debug Information
+1. Run with debug logging enabled
+2. Check configuration: ` + "`./scim-sync validate-config`" + `
+3. Test individual components with setup validation
+4. Capture relevant log snippets
+
+#### Common Log Patterns to Share
+- Complete error messages with stack traces
+- API response codes and messages
+- Configuration validation output
+- Network connectivity test results
+
+#### When to Contact Support
+- API tokens and service accounts are correctly configured
+- Configuration passes validation
+- Network connectivity is confirmed
+- Issue persists across multiple attempts
+
+#### Information to Include
+1. Go SCIM sync version: ` + "`./scim-sync version`" + `
+2. Configuration file (with secrets redacted)
+3. Complete error messages
+4. Steps to reproduce the issue
+5. Environment details (OS, container, etc.)
+`
+
+        return os.WriteFile(path, []byte(content), 0644)
+}</pre>
+		
+		<pre class="file" id="file11" style="display: none">package setup
+
+import (
+        "fmt"
+        "net/http"
+        "os"
+        "time"
+
+        "github.com/gobeyondidentity/google-workspace-provisioner/internal/config"
+        "github.com/gobeyondidentity/google-workspace-provisioner/internal/gws"
+        "github.com/sirupsen/logrus"
+)
+
+// Validator handles setup validation and connectivity testing
+type Validator struct {
+        config *config.Config
+        logger *logrus.Logger
+}
+
+// ValidationResult represents the result of a validation check
+type ValidationResult struct {
+        Component string    `json:"component"`
+        Status    string    `json:"status"`
+        Message   string    `json:"message"`
+        Details   string    `json:"details,omitempty"`
+        Duration  time.Duration `json:"duration"`
+}
+
+// ValidationSummary contains overall validation results
+type ValidationSummary struct {
+        OverallStatus string              `json:"overall_status"`
+        TotalChecks   int                 `json:"total_checks"`
+        Passed        int                 `json:"passed"`
+        Failed        int                 `json:"failed"`
+        Results       []*ValidationResult `json:"results"`
+        Duration      time.Duration       `json:"duration"`
+}
+
+// NewValidator creates a new setup validator
+func NewValidator(cfg *config.Config) *Validator <span class="cov10" title="9">{
+        logger := logrus.New()
+        logger.SetLevel(logrus.ErrorLevel) // Only show errors during validation
+        
+        return &amp;Validator{
+                config: cfg,
+                logger: logger,
+        }
+}</span>
+
+// ValidateSetup performs comprehensive setup validation
+func (v *Validator) ValidateSetup() (*ValidationSummary, error) <span class="cov0" title="0">{
+        startTime := time.Now()
+        
+        fmt.Println("🔍 Validating Go SCIM Sync Setup")
+        fmt.Println("═══════════════════════════════")
+        fmt.Println()
+        
+        summary := &amp;ValidationSummary{
+                Results: make([]*ValidationResult, 0),
+        }
+        
+        // Configuration validation
+        v.addResult(summary, v.validateConfiguration())
+        
+        // Environment validation
+        v.addResult(summary, v.validateEnvironment())
+        
+        // Google Workspace connectivity
+        v.addResult(summary, v.validateGoogleWorkspace())
+        
+        // Beyond Identity connectivity
+        v.addResult(summary, v.validateBeyondIdentity())
+        
+        // Group existence check
+        v.addResult(summary, v.validateGroups())
+        
+        // Calculate summary
+        summary.Duration = time.Since(startTime)
+        summary.TotalChecks = len(summary.Results)
+        
+        for _, result := range summary.Results </span><span class="cov0" title="0">{
+                if result.Status == "PASS" </span><span class="cov0" title="0">{
+                        summary.Passed++
+                }</span> else<span class="cov0" title="0"> {
+                        summary.Failed++
+                }</span>
+        }
+        
+        <span class="cov0" title="0">if summary.Failed == 0 </span><span class="cov0" title="0">{
+                summary.OverallStatus = "PASS"
+        }</span> else<span class="cov0" title="0"> {
+                summary.OverallStatus = "FAIL"
+        }</span>
+        
+        // Print summary
+        <span class="cov0" title="0">v.printSummary(summary)
+        
+        return summary, nil</span>
+}
+
+// validateConfiguration validates the configuration structure
+func (v *Validator) validateConfiguration() *ValidationResult <span class="cov3" title="2">{
+        fmt.Print("📋 Configuration validation... ")
+        start := time.Now()
+        
+        if err := v.config.Validate(); err != nil </span><span class="cov1" title="1">{
+                fmt.Println("❌ FAIL")
+                return &amp;ValidationResult{
+                        Component: "Configuration",
+                        Status:    "FAIL",
+                        Message:   "Configuration validation failed",
+                        Details:   err.Error(),
+                        Duration:  time.Since(start),
+                }
+        }</span>
+        
+        <span class="cov1" title="1">fmt.Println("✅ PASS")
+        return &amp;ValidationResult{
+                Component: "Configuration",
+                Status:    "PASS",
+                Message:   "Configuration is valid",
+                Duration:  time.Since(start),
+        }</span>
+}
+
+// validateEnvironment validates required environment variables and files
+func (v *Validator) validateEnvironment() *ValidationResult <span class="cov5" title="3">{
+        fmt.Print("🌍 Environment validation... ")
+        start := time.Now()
+        
+        var issues []string
+        
+        // Check API token
+        if v.config.BeyondIdentity.APIToken == "" </span><span class="cov1" title="1">{
+                issues = append(issues, "Beyond Identity API token not set in config.yaml")
+        }</span>
+        
+        // Check service account file
+        <span class="cov5" title="3">if _, err := os.Stat(v.config.GoogleWorkspace.ServiceAccountKeyPath); os.IsNotExist(err) </span><span class="cov1" title="1">{
+                issues = append(issues, fmt.Sprintf("Service account file not found: %s", v.config.GoogleWorkspace.ServiceAccountKeyPath))
+        }</span>
+        
+        <span class="cov5" title="3">if len(issues) &gt; 0 </span><span class="cov3" title="2">{
+                fmt.Println("❌ FAIL")
+                return &amp;ValidationResult{
+                        Component: "Environment",
+                        Status:    "FAIL",
+                        Message:   "Environment setup issues found",
+                        Details:   fmt.Sprintf("Issues: %v", issues),
+                        Duration:  time.Since(start),
+                }
+        }</span>
+        
+        <span class="cov1" title="1">fmt.Println("✅ PASS")
+        return &amp;ValidationResult{
+                Component: "Environment",
+                Status:    "PASS",
+                Message:   "Environment is properly configured",
+                Duration:  time.Since(start),
+        }</span>
+}
+
+// validateGoogleWorkspace tests Google Workspace connectivity
+func (v *Validator) validateGoogleWorkspace() *ValidationResult <span class="cov0" title="0">{
+        fmt.Print("🔵 Google Workspace connectivity... ")
+        start := time.Now()
+        
+        _, err := gws.NewClient(
+                v.config.GoogleWorkspace.ServiceAccountKeyPath,
+                v.config.GoogleWorkspace.Domain,
+                v.config.GoogleWorkspace.SuperAdminEmail,
+        )
+        if err != nil </span><span class="cov0" title="0">{
+                fmt.Println("❌ FAIL")
+                return &amp;ValidationResult{
+                        Component: "Google Workspace",
+                        Status:    "FAIL",
+                        Message:   "Failed to create Google Workspace client",
+                        Details:   err.Error(),
+                        Duration:  time.Since(start),
+                }
+        }</span>
+        
+        // Test basic connectivity - client creation validates auth setup
+        // We could expand this to make actual API calls if needed
+        
+        <span class="cov0" title="0">fmt.Println("✅ PASS")
+        return &amp;ValidationResult{
+                Component: "Google Workspace",
+                Status:    "PASS",
+                Message:   "Google Workspace client created successfully",
+                Details:   fmt.Sprintf("Domain: %s", v.config.GoogleWorkspace.Domain),
+                Duration:  time.Since(start),
+        }</span>
+}
+
+// validateBeyondIdentity tests Beyond Identity connectivity
+func (v *Validator) validateBeyondIdentity() *ValidationResult <span class="cov0" title="0">{
+        fmt.Print("🟢 Beyond Identity connectivity... ")
+        start := time.Now()
+        
+        // Get API token
+        apiToken := v.config.BeyondIdentity.APIToken
+        
+        if apiToken == "" </span><span class="cov0" title="0">{
+                fmt.Println("❌ FAIL")
+                return &amp;ValidationResult{
+                        Component: "Beyond Identity",
+                        Status:    "FAIL",
+                        Message:   "API token not available",
+                        Details:   "Beyond Identity API token not set in config.yaml",
+                        Duration:  time.Since(start),
+                }
+        }</span>
+        
+        // Test connectivity with a simple HTTP request
+        <span class="cov0" title="0">client := &amp;http.Client{Timeout: 10 * time.Second}
+        req, err := http.NewRequest("GET", v.config.BeyondIdentity.SCIMBaseURL+"/Users?count=1", nil)
+        if err != nil </span><span class="cov0" title="0">{
+                fmt.Println("❌ FAIL")
+                return &amp;ValidationResult{
+                        Component: "Beyond Identity",
+                        Status:    "FAIL",
+                        Message:   "Failed to create test request",
+                        Details:   err.Error(),
+                        Duration:  time.Since(start),
+                }
+        }</span>
+        
+        <span class="cov0" title="0">req.Header.Set("Authorization", "Bearer "+apiToken)
+        req.Header.Set("Accept", "application/scim+json")
+        
+        resp, err := client.Do(req)
+        if err != nil </span><span class="cov0" title="0">{
+                fmt.Println("❌ FAIL")
+                return &amp;ValidationResult{
+                        Component: "Beyond Identity",
+                        Status:    "FAIL",
+                        Message:   "Failed to connect to Beyond Identity API",
+                        Details:   err.Error(),
+                        Duration:  time.Since(start),
+                }
+        }</span>
+        <span class="cov0" title="0">defer resp.Body.Close()
+        
+        if resp.StatusCode == 401 </span><span class="cov0" title="0">{
+                fmt.Println("❌ FAIL")
+                return &amp;ValidationResult{
+                        Component: "Beyond Identity",
+                        Status:    "FAIL",
+                        Message:   "Authentication failed",
+                        Details:   "Invalid API token or insufficient permissions",
+                        Duration:  time.Since(start),
+                }
+        }</span>
+        
+        <span class="cov0" title="0">if resp.StatusCode &gt;= 400 </span><span class="cov0" title="0">{
+                fmt.Println("❌ FAIL")
+                return &amp;ValidationResult{
+                        Component: "Beyond Identity",
+                        Status:    "FAIL",
+                        Message:   "API request failed",
+                        Details:   fmt.Sprintf("HTTP %d", resp.StatusCode),
+                        Duration:  time.Since(start),
+                }
+        }</span>
+        
+        <span class="cov0" title="0">fmt.Println("✅ PASS")
+        return &amp;ValidationResult{
+                Component: "Beyond Identity",
+                Status:    "PASS",
+                Message:   "Beyond Identity API is accessible",
+                Details:   fmt.Sprintf("Endpoint: %s", v.config.BeyondIdentity.SCIMBaseURL),
+                Duration:  time.Since(start),
+        }</span>
+}
+
+// validateGroups checks if configured groups exist in Google Workspace
+func (v *Validator) validateGroups() *ValidationResult <span class="cov3" title="2">{
+        fmt.Print("👥 Group existence check... ")
+        start := time.Now()
+        
+        if len(v.config.Sync.Groups) == 0 </span><span class="cov1" title="1">{
+                fmt.Println("❌ FAIL")
+                return &amp;ValidationResult{
+                        Component: "Groups",
+                        Status:    "FAIL",
+                        Message:   "No groups configured for sync",
+                        Duration:  time.Since(start),
+                }
+        }</span>
+        
+        // For now, just validate that groups are configured
+        // In a full implementation, we could actually check if they exist in GWS
+        <span class="cov1" title="1">fmt.Println("✅ PASS")
+        return &amp;ValidationResult{
+                Component: "Groups",
+                Status:    "PASS",
+                Message:   fmt.Sprintf("Found %d groups configured for sync", len(v.config.Sync.Groups)),
+                Details:   fmt.Sprintf("Groups: %v", v.config.Sync.Groups),
+                Duration:  time.Since(start),
+        }</span>
+}
+
+// addResult adds a validation result to the summary
+func (v *Validator) addResult(summary *ValidationSummary, result *ValidationResult) <span class="cov1" title="1">{
+        summary.Results = append(summary.Results, result)
+}</span>
+
+// printSummary prints the validation summary
+func (v *Validator) printSummary(summary *ValidationSummary) <span class="cov0" title="0">{
+        fmt.Println()
+        fmt.Println("📊 Validation Summary")
+        fmt.Println("════════════════════")
+        
+        if summary.OverallStatus == "PASS" </span><span class="cov0" title="0">{
+                fmt.Printf("✅ Overall Status: %s\n", summary.OverallStatus)
+        }</span> else<span class="cov0" title="0"> {
+                fmt.Printf("❌ Overall Status: %s\n", summary.OverallStatus)
+        }</span>
+        
+        <span class="cov0" title="0">fmt.Printf("📈 Results: %d passed, %d failed (total: %d)\n", 
+                summary.Passed, summary.Failed, summary.TotalChecks)
+        fmt.Printf("⏱️  Duration: %v\n", summary.Duration.Round(time.Millisecond))
+        
+        if summary.Failed &gt; 0 </span><span class="cov0" title="0">{
+                fmt.Println()
+                fmt.Println("❌ Failed Checks:")
+                for _, result := range summary.Results </span><span class="cov0" title="0">{
+                        if result.Status == "FAIL" </span><span class="cov0" title="0">{
+                                fmt.Printf("   • %s: %s\n", result.Component, result.Message)
+                                if result.Details != "" </span><span class="cov0" title="0">{
+                                        fmt.Printf("     Details: %s\n", result.Details)
+                                }</span>
+                        }
+                }
+                
+                <span class="cov0" title="0">fmt.Println()
+                fmt.Println("💡 Next Steps:")
+                fmt.Println("   1. Fix the issues listed above")
+                fmt.Println("   2. Run validation again: ./scim-sync setup validate")
+                fmt.Println("   3. Once all checks pass, try a test sync: ./scim-sync run")</span>
+        } else<span class="cov0" title="0"> {
+                fmt.Println()
+                fmt.Println("🎉 All checks passed! Your setup is ready.")
+                fmt.Println("💡 Next Steps:")
+                fmt.Println("   1. Try a test sync: ./scim-sync run")
+                fmt.Println("   2. Start server mode: ./scim-sync server")
+                fmt.Println("   3. Check the health endpoint: curl http://localhost:8080/health")
+        }</span>
+}</pre>
+		
+		<pre class="file" id="file12" style="display: none">package sync
+
+import (
+        "fmt"
+        "strings"
+        "time"
+
+        "github.com/gobeyondidentity/google-workspace-provisioner/internal/bi"
+        "github.com/gobeyondidentity/google-workspace-provisioner/internal/config"
+        "github.com/gobeyondidentity/google-workspace-provisioner/internal/gws"
+        "github.com/sirupsen/logrus"
+)
+
+// Engine orchestrates the synchronization between Google Workspace and Beyond Identity
+type Engine struct {
+        gwsClient GWSClient
+        biClient  BIClient
+        config    *config.Config
+        logger    *logrus.Logger
+}
+
+// SyncResult contains the results of a synchronization operation
+type SyncResult struct {
+        GroupsProcessed   int
+        UsersCreated      int
+        UsersUpdated      int
+        GroupsCreated     int
+        MembershipsAdded  int
+        MembershipsRemoved int
+        Errors            []error
+}
+
+// NewEngine creates a new sync engine
+func NewEngine(gwsClient GWSClient, biClient BIClient, cfg *config.Config, logger *logrus.Logger) *Engine <span class="cov6" title="5">{
+        return &amp;Engine{
+                gwsClient: gwsClient,
+                biClient:  biClient,
+                config:    cfg,
+                logger:    logger,
+        }
+}</span>
+
+// Sync performs the complete synchronization process
+func (e *Engine) Sync() (*SyncResult, error) <span class="cov5" title="4">{
+        result := &amp;SyncResult{}
+        
+        e.logger.Info("Starting sync process...")
+        
+        for _, groupEmail := range e.config.Sync.Groups </span><span class="cov5" title="4">{
+                e.logger.Infof("Processing group: %s", groupEmail)
+                
+                if err := e.syncGroup(groupEmail, result); err != nil </span><span class="cov0" title="0">{
+                        e.logger.Errorf("Failed to sync group %s: %v", groupEmail, err)
+                        result.Errors = append(result.Errors, fmt.Errorf("group %s: %w", groupEmail, err))
+                        continue</span>
+                }
+                
+                <span class="cov5" title="4">result.GroupsProcessed++</span>
+        }
+        
+        <span class="cov5" title="4">e.logger.Infof("Sync completed. Groups: %d, Users created: %d, Users updated: %d, Groups created: %d, Memberships added: %d, Memberships removed: %d, Errors: %d",
+                result.GroupsProcessed, result.UsersCreated, result.UsersUpdated, result.GroupsCreated,
+                result.MembershipsAdded, result.MembershipsRemoved, len(result.Errors))
+        
+        return result, nil</span>
+}
+
+// syncGroup synchronizes a single Google Workspace group to Beyond Identity
+func (e *Engine) syncGroup(groupEmail string, result *SyncResult) error <span class="cov5" title="4">{
+        // Get the Google Workspace group
+        gwsGroup, err := e.gwsClient.GetGroup(groupEmail)
+        if err != nil </span><span class="cov0" title="0">{
+                return fmt.Errorf("failed to get GWS group: %w", err)
+        }</span>
+        
+        // Get group members from Google Workspace
+        <span class="cov5" title="4">gwsMembers, err := e.gwsClient.GetGroupMembers(groupEmail)
+        if err != nil </span><span class="cov0" title="0">{
+                return fmt.Errorf("failed to get GWS group members: %w", err)
+        }</span>
+        
+        <span class="cov5" title="4">e.logger.Infof("Found %d members in Google Workspace group %s", len(gwsMembers), groupEmail)
+        
+        // Create or get the Beyond Identity group
+        biGroupName := e.config.BeyondIdentity.GroupPrefix + gwsGroup.Name
+        biGroup, err := e.ensureBIGroup(biGroupName, gwsGroup.Description, result)
+        if err != nil </span><span class="cov0" title="0">{
+                return fmt.Errorf("failed to ensure BI group: %w", err)
+        }</span>
+        
+        // Sync users and collect their IDs
+        <span class="cov5" title="4">userIDs, err := e.syncUsers(gwsMembers, result)
+        if err != nil </span><span class="cov0" title="0">{
+                return fmt.Errorf("failed to sync users: %w", err)
+        }</span>
+        
+        // Update group membership
+        <span class="cov5" title="4">if err := e.updateGroupMembership(biGroup.ID, userIDs, result); err != nil </span><span class="cov0" title="0">{
+                return fmt.Errorf("failed to update group membership: %w", err)
+        }</span>
+        
+        <span class="cov5" title="4">return nil</span>
+}
+
+// ensureBIGroup creates or retrieves a Beyond Identity group
+func (e *Engine) ensureBIGroup(groupName, description string, result *SyncResult) (*bi.Group, error) <span class="cov5" title="4">{
+        // Try to find existing group
+        existingGroup, err := e.biClient.FindGroupByDisplayName(groupName)
+        if err != nil </span><span class="cov0" title="0">{
+                return nil, fmt.Errorf("failed to search for group: %w", err)
+        }</span>
+        
+        <span class="cov5" title="4">if existingGroup != nil </span><span class="cov1" title="1">{
+                e.logger.Debugf("Using existing group: %s (ID: %s)", groupName, existingGroup.ID)
+                return existingGroup, nil
+        }</span>
+        
+        // Create new group
+        <span class="cov4" title="3">if e.config.App.TestMode </span><span class="cov1" title="1">{
+                e.logger.Infof("TEST MODE: Would create group '%s' with description '%s'", groupName, description)
+                // Return a fake group for test mode
+                return &amp;bi.Group{
+                        ID:          "test-group-id",
+                        DisplayName: groupName,
+                }, nil
+        }</span>
+        
+        <span class="cov3" title="2">e.logger.Infof("Creating new group: %s", groupName)
+        newGroup := &amp;bi.Group{
+                DisplayName: groupName,
+        }
+        
+        if description != "" </span><span class="cov3" title="2">{
+                // Note: SCIM 2.0 Group schema doesn't have description field in core schema
+                // We'll just log it for now
+                e.logger.Debugf("Group description (not stored in SCIM): %s", description)
+        }</span>
+        
+        <span class="cov3" title="2">createdGroup, err := e.biClient.CreateGroup(newGroup)
+        if err != nil </span><span class="cov0" title="0">{
+                return nil, fmt.Errorf("failed to create group: %w", err)
+        }</span>
+        
+        <span class="cov3" title="2">result.GroupsCreated++
+        e.logger.Infof("Created group: %s (ID: %s)", groupName, createdGroup.ID)
+        
+        return createdGroup, nil</span>
+}
+
+// syncUsers ensures all users exist in Beyond Identity and returns their IDs
+func (e *Engine) syncUsers(gwsMembers []*gws.GroupMember, result *SyncResult) ([]string, error) <span class="cov5" title="4">{
+        var userIDs []string
+        
+        for _, member := range gwsMembers </span><span class="cov7" title="7">{
+                // Skip non-user members (groups, etc.)
+                if member.Type != "USER" </span><span class="cov1" title="1">{
+                        e.logger.Debugf("Skipping non-user member: %s (type: %s)", member.Email, member.Type)
+                        continue</span>
+                }
+                
+                // Skip suspended members
+                <span class="cov6" title="6">if member.Status == "SUSPENDED" </span><span class="cov1" title="1">{
+                        e.logger.Debugf("Skipping suspended member: %s", member.Email)
+                        continue</span>
+                }
+                
+                <span class="cov6" title="5">userID, err := e.ensureBIUser(member.Email, result)
+                if err != nil </span><span class="cov0" title="0">{
+                        e.logger.Errorf("Failed to ensure user %s: %v", member.Email, err)
+                        result.Errors = append(result.Errors, fmt.Errorf("user %s: %w", member.Email, err))
+                        continue</span>
+                }
+                
+                <span class="cov6" title="5">if userID != "" </span><span class="cov6" title="5">{
+                        userIDs = append(userIDs, userID)
+                }</span>
+        }
+        
+        <span class="cov5" title="4">return userIDs, nil</span>
+}
+
+// ensureBIUser creates or updates a user in Beyond Identity
+func (e *Engine) ensureBIUser(email string, result *SyncResult) (string, error) <span class="cov6" title="5">{
+        // Try to find existing user
+        existingUser, err := e.biClient.FindUserByEmail(email)
+        if err != nil </span><span class="cov0" title="0">{
+                return "", fmt.Errorf("failed to search for user: %w", err)
+        }</span>
+        
+        <span class="cov6" title="5">if existingUser != nil </span><span class="cov1" title="1">{
+                e.logger.Debugf("Found existing user: %s (ID: %s)", email, existingUser.ID)
+                // Check if user needs updating (could add logic here to update displayName, etc.)
+                return existingUser.ID, nil
+        }</span>
+        
+        // Create new user
+        <span class="cov5" title="4">if e.config.App.TestMode </span><span class="cov1" title="1">{
+                e.logger.Infof("TEST MODE: Would create user '%s'", email)
+                return "test-user-id", nil
+        }</span>
+        
+        <span class="cov4" title="3">e.logger.Infof("Creating new user: %s", email)
+        
+        // Extract display name from email
+        displayName := extractDisplayName(email)
+        
+        newUser := &amp;bi.User{
+                UserName:    email,
+                DisplayName: displayName,
+                Emails: []bi.Email{
+                        {
+                                Value:   email,
+                                Type:    "work",
+                                Primary: true,
+                        },
+                },
+                Active: true,
+        }
+        
+        createdUser, err := e.biClient.CreateUser(newUser)
+        if err != nil </span><span class="cov0" title="0">{
+                return "", fmt.Errorf("failed to create user: %w", err)
+        }</span>
+        
+        <span class="cov4" title="3">result.UsersCreated++
+        e.logger.Infof("Created user: %s (ID: %s)", email, createdUser.ID)
+        
+        return createdUser.ID, nil</span>
+}
+
+// updateGroupMembership updates the membership of a Beyond Identity group
+func (e *Engine) updateGroupMembership(groupID string, userIDs []string, result *SyncResult) error <span class="cov5" title="4">{
+        if e.config.App.TestMode </span><span class="cov1" title="1">{
+                e.logger.Infof("TEST MODE: Would update group %s with %d members", groupID, len(userIDs))
+                return nil
+        }</span>
+        
+        // Convert user IDs to group members
+        <span class="cov4" title="3">var newMembers []bi.GroupMember
+        for _, userID := range userIDs </span><span class="cov5" title="4">{
+                newMembers = append(newMembers, bi.GroupMember{
+                        Value: userID,
+                })
+        }</span>
+        
+        // For simplicity, we'll replace all members (remove all, then add all)
+        // In a production system, you might want to be more surgical about this
+        <span class="cov4" title="3">e.logger.Infof("Updating group membership for group %s with %d members", groupID, len(newMembers))
+        
+        // Note: This is a simplified approach. A more sophisticated implementation
+        // would compare existing members and only add/remove the differences.
+        err := e.biClient.UpdateGroupMembers(groupID, newMembers, []bi.GroupMember{})
+        if err != nil </span><span class="cov0" title="0">{
+                return fmt.Errorf("failed to update group members: %w", err)
+        }</span>
+        
+        <span class="cov4" title="3">result.MembershipsAdded += len(newMembers)
+        e.logger.Infof("Updated group membership: added %d members", len(newMembers))
+        
+        return nil</span>
+}
+
+// extractDisplayName extracts a display name from an email address
+func extractDisplayName(email string) string <span class="cov8" title="11">{
+        parts := strings.Split(email, "@")
+        if len(parts) == 0 </span><span class="cov0" title="0">{
+                return email
+        }</span>
+        
+        <span class="cov8" title="11">localPart := parts[0]
+        
+        // Try to make it more readable
+        // Replace common separators with spaces
+        displayName := strings.ReplaceAll(localPart, ".", " ")
+        displayName = strings.ReplaceAll(displayName, "_", " ")
+        displayName = strings.ReplaceAll(displayName, "-", " ")
+        
+        // Title case each word
+        words := strings.Fields(displayName)
+        for i, word := range words </span><span class="cov10" title="18">{
+                if len(word) &gt; 0 </span><span class="cov10" title="18">{
+                        words[i] = strings.ToUpper(word[:1]) + strings.ToLower(word[1:])
+                }</span>
+        }
+        
+        <span class="cov8" title="11">result := strings.Join(words, " ")
+        if result == "" </span><span class="cov1" title="1">{
+                return email // Fallback to email if we can't parse it
+        }</span>
+        
+        <span class="cov8" title="10">return result</span>
+}
+
+// RetryWithBackoff executes a function with exponential backoff retry logic
+func (e *Engine) RetryWithBackoff(operation func() error, maxAttempts int, baseDelay time.Duration) error <span class="cov4" title="3">{
+        var lastErr error
+        
+        for attempt := 1; attempt &lt;= maxAttempts; attempt++ </span><span class="cov6" title="5">{
+                if err := operation(); err != nil </span><span class="cov4" title="3">{
+                        lastErr = err
+                        
+                        if attempt == maxAttempts </span><span class="cov1" title="1">{
+                                break</span>
+                        }
+                        
+                        <span class="cov3" title="2">delay := time.Duration(attempt) * baseDelay
+                        e.logger.Warnf("Operation failed (attempt %d/%d), retrying in %v: %v", 
+                                attempt, maxAttempts, delay, err)
+                        time.Sleep(delay)
+                        continue</span>
+                }
+                
+                <span class="cov3" title="2">return nil</span> // Success
+        }
+        
+        <span class="cov1" title="1">return fmt.Errorf("operation failed after %d attempts: %w", maxAttempts, lastErr)</span>
+}</pre>
+		
+		<pre class="file" id="file13" style="display: none">package wizard
+
+import (
+        "bufio"
+        "fmt"
+        "os"
+        "path/filepath"
+        "strconv"
+        "strings"
+
+        "github.com/gobeyondidentity/google-workspace-provisioner/internal/config"
+)
+
+// Wizard handles interactive configuration setup
+type Wizard struct {
+        reader *bufio.Reader
+        config *config.Config
+}
+
+// NewWizard creates a new configuration wizard
+func NewWizard() *Wizard <span class="cov1" title="1">{
+        // Create reader with larger buffer to handle long API tokens
+        reader := bufio.NewReaderSize(os.Stdin, 8192)
+        return &amp;Wizard{
+                reader: reader,
+                config: &amp;config.Config{},
+        }
+}</span>
+
+// Run starts the interactive configuration wizard
+func (w *Wizard) Run() error <span class="cov0" title="0">{
+        fmt.Println("🚀 Welcome to the Go SCIM Sync Configuration Wizard!")
+        fmt.Println("This wizard will help you set up your configuration for syncing users from Google Workspace to Beyond Identity.")
+        fmt.Println()
+
+        // Application settings
+        if err := w.configureApp(); err != nil </span><span class="cov0" title="0">{
+                return fmt.Errorf("failed to configure app settings: %w", err)
+        }</span>
+
+        // Google Workspace settings
+        <span class="cov0" title="0">if err := w.configureGoogleWorkspace(); err != nil </span><span class="cov0" title="0">{
+                return fmt.Errorf("failed to configure Google Workspace: %w", err)
+        }</span>
+
+        // Beyond Identity settings
+        <span class="cov0" title="0">if err := w.configureBeyondIdentity(); err != nil </span><span class="cov0" title="0">{
+                return fmt.Errorf("failed to configure Beyond Identity: %w", err)
+        }</span>
+
+        // Sync settings
+        <span class="cov0" title="0">if err := w.configureSync(); err != nil </span><span class="cov0" title="0">{
+                return fmt.Errorf("failed to configure sync settings: %w", err)
+        }</span>
+
+        // Server settings
+        <span class="cov0" title="0">if err := w.configureServer(); err != nil </span><span class="cov0" title="0">{
+                return fmt.Errorf("failed to configure server settings: %w", err)
+        }</span>
+
+        // Set defaults and validate (skip API token validation if not set)
+        <span class="cov0" title="0">w.config.SetDefaults()
+        skipAPIToken := w.config.BeyondIdentity.APIToken == ""
+        if err := w.config.ValidateWithOptions(config.ValidateOptions{SkipAPIToken: skipAPIToken}); err != nil </span><span class="cov0" title="0">{
+                fmt.Printf("⚠️  Configuration validation failed: %v\n", err)
+                fmt.Println("Please review your settings and try again.")
+                return err
+        }</span>
+
+        // Save configuration
+        <span class="cov0" title="0">return w.saveConfiguration()</span>
+}
+
+// configureApp configures application-level settings
+func (w *Wizard) configureApp() error <span class="cov0" title="0">{
+        fmt.Println("📋 Application Settings")
+        fmt.Println("═══════════════════════")
+
+        // Log level
+        logLevel := w.promptWithDefault("Log level (debug, info, warn, error)", "info")
+        w.config.App.LogLevel = logLevel
+
+        // Test mode
+        testMode := w.promptYesNo("Enable test mode? (recommended for first run)", true)
+        w.config.App.TestMode = testMode
+
+        if testMode </span><span class="cov0" title="0">{
+                fmt.Println("✅ Test mode enabled - no actual changes will be made during sync operations")
+        }</span>
+
+        <span class="cov0" title="0">fmt.Println()
+        return nil</span>
+}
+
+// configureGoogleWorkspace configures Google Workspace settings
+func (w *Wizard) configureGoogleWorkspace() error <span class="cov0" title="0">{
+        fmt.Println("🔵 Google Workspace Configuration")
+        fmt.Println("═════════════════════════════════")
+
+        // Domain
+        domain := w.promptRequired("Google Workspace domain (e.g., company.com)")
+        w.config.GoogleWorkspace.Domain = domain
+
+        // Super admin email
+        defaultAdmin := fmt.Sprintf("admin@%s", domain)
+        adminEmail := w.promptWithDefault("Super admin email", defaultAdmin)
+        w.config.GoogleWorkspace.SuperAdminEmail = adminEmail
+
+        // Service account key path
+        fmt.Println("\n📝 Service Account Setup:")
+        fmt.Println("You need a Google Cloud service account with domain-wide delegation.")
+        fmt.Println("See: https://developers.google.com/admin-sdk/directory/v1/guides/delegation")
+        
+        keyPath := w.promptRequired("Path to service account JSON file")
+        
+        // Expand relative paths
+        if !filepath.IsAbs(keyPath) </span><span class="cov0" title="0">{
+                cwd, _ := os.Getwd()
+                keyPath = filepath.Join(cwd, keyPath)
+        }</span>
+        
+        // Check if file exists
+        <span class="cov0" title="0">if _, err := os.Stat(keyPath); os.IsNotExist(err) </span><span class="cov0" title="0">{
+                fmt.Printf("⚠️  Warning: File does not exist at %s\n", keyPath)
+                fmt.Println("Make sure to place your service account file there before running sync.")
+        }</span> else<span class="cov0" title="0"> {
+                fmt.Println("✅ Service account file found")
+        }</span>
+        
+        <span class="cov0" title="0">w.config.GoogleWorkspace.ServiceAccountKeyPath = keyPath
+
+        fmt.Println()
+        return nil</span>
+}
+
+// configureBeyondIdentity configures Beyond Identity settings
+func (w *Wizard) configureBeyondIdentity() error <span class="cov0" title="0">{
+        fmt.Println("🟢 Beyond Identity Configuration")
+        fmt.Println("═══════════════════════════════")
+
+        // API token
+        fmt.Println("📝 API Token Setup:")
+        fmt.Println("You need a Beyond Identity API token with SCIM permissions.")
+        fmt.Println("💡 Recommended: Use option 2 (file path) to avoid input buffer issues")
+        fmt.Println()
+        
+        token := w.promptAPIToken("Beyond Identity API token")
+        w.config.BeyondIdentity.APIToken = token
+        
+        if token == "" </span><span class="cov0" title="0">{
+                fmt.Println("⚠️  API token not set - you'll need to add it to config.yaml manually")
+                fmt.Println("💡 You can find the token in: deprecated/config.py")
+        }</span> else<span class="cov0" title="0"> {
+                fmt.Println("✅ API token configured")
+        }</span>
+
+        // SCIM base URL
+        <span class="cov0" title="0">scimURL := w.promptWithDefault("SCIM API base URL", "https://api.byndid.com/scim/v2")
+        w.config.BeyondIdentity.SCIMBaseURL = scimURL
+
+        // Native API URL
+        nativeURL := w.promptWithDefault("Native API base URL", "https://api.byndid.com/v2")
+        w.config.BeyondIdentity.NativeAPIURL = nativeURL
+
+        // Group prefix
+        groupPrefix := w.promptWithDefault("Group name prefix", "GoogleSCIM_")
+        w.config.BeyondIdentity.GroupPrefix = groupPrefix
+
+        fmt.Println()
+        return nil</span>
+}
+
+// configureSync configures synchronization settings
+func (w *Wizard) configureSync() error <span class="cov0" title="0">{
+        fmt.Println("🔄 Synchronization Settings")
+        fmt.Println("═══════════════════════════")
+
+        // Groups to sync
+        fmt.Println("📝 Groups to Sync:")
+        fmt.Println("Enter Google Workspace group email addresses to sync.")
+        fmt.Println("Press Enter on an empty line when done.")
+        
+        var groups []string
+        for </span><span class="cov0" title="0">{
+                group := w.prompt(fmt.Sprintf("Group %d email (or press Enter to finish)", len(groups)+1))
+                if group == "" </span><span class="cov0" title="0">{
+                        break</span>
+                }
+                
+                // Basic email validation
+                <span class="cov0" title="0">if !strings.Contains(group, "@") </span><span class="cov0" title="0">{
+                        fmt.Println("⚠️  Please enter a valid email address")
+                        continue</span>
+                }
+                
+                <span class="cov0" title="0">groups = append(groups, group)
+                fmt.Printf("✅ Added: %s\n", group)</span>
+        }
+        
+        <span class="cov0" title="0">if len(groups) == 0 </span><span class="cov0" title="0">{
+                // Add at least one group
+                group := w.promptRequired("At least one group is required")
+                groups = append(groups, group)
+        }</span>
+        
+        <span class="cov0" title="0">w.config.Sync.Groups = groups
+
+        // Retry settings
+        retryAttempts := w.promptIntWithDefault("Retry attempts for failed operations", 3)
+        w.config.Sync.RetryAttempts = retryAttempts
+
+        retryDelay := w.promptIntWithDefault("Retry delay (seconds)", 30)
+        w.config.Sync.RetryDelaySeconds = retryDelay
+
+        fmt.Println()
+        return nil</span>
+}
+
+// configureServer configures server mode settings
+func (w *Wizard) configureServer() error <span class="cov0" title="0">{
+        fmt.Println("🌐 Server Mode Configuration")
+        fmt.Println("════════════════════════════")
+
+        // Port
+        port := w.promptIntWithDefault("HTTP server port", 8080)
+        w.config.Server.Port = port
+
+        // Scheduling
+        enableScheduling := w.promptYesNo("Enable automatic sync scheduling?", false)
+        w.config.Server.ScheduleEnabled = enableScheduling
+
+        if enableScheduling </span><span class="cov0" title="0">{
+                fmt.Println("\n📅 Schedule Configuration:")
+                fmt.Println("Enter a cron schedule expression.")
+                fmt.Println("Examples:")
+                fmt.Println("  '0 */6 * * *'   - Every 6 hours")
+                fmt.Println("  '0 0 * * *'     - Daily at midnight")
+                fmt.Println("  '0 9 * * 1-5'   - Weekdays at 9 AM")
+                
+                schedule := w.promptWithDefault("Cron schedule", "0 */6 * * *")
+                w.config.Server.Schedule = schedule
+                
+                fmt.Printf("✅ Scheduled sync: %s\n", schedule)
+        }</span> else<span class="cov0" title="0"> {
+                w.config.Server.Schedule = "0 */6 * * *" // Default, but disabled
+                fmt.Println("✅ Manual sync only - use HTTP API to trigger syncs")
+        }</span>
+
+        <span class="cov0" title="0">fmt.Println()
+        return nil</span>
+}
+
+// saveConfiguration saves the configuration to a file
+func (w *Wizard) saveConfiguration() error <span class="cov0" title="0">{
+        fmt.Println("💾 Save Configuration")
+        fmt.Println("════════════════════")
+
+        // Default config path
+        defaultPath := "./config.yaml"
+        configPath := w.promptWithDefault("Configuration file path", defaultPath)
+
+        // Create directory if needed
+        dir := filepath.Dir(configPath)
+        if err := os.MkdirAll(dir, 0755); err != nil </span><span class="cov0" title="0">{
+                return fmt.Errorf("failed to create config directory: %w", err)
+        }</span>
+
+        // Check if file exists
+        <span class="cov0" title="0">if _, err := os.Stat(configPath); err == nil </span><span class="cov0" title="0">{
+                overwrite := w.promptYesNo(fmt.Sprintf("File %s already exists. Overwrite?", configPath), false)
+                if !overwrite </span><span class="cov0" title="0">{
+                        fmt.Println("❌ Configuration not saved")
+                        return fmt.Errorf("user chose not to overwrite existing file")
+                }</span>
+        }
+
+        // Save configuration
+        <span class="cov0" title="0">if err := config.Save(w.config, configPath); err != nil </span><span class="cov0" title="0">{
+                return fmt.Errorf("failed to save configuration: %w", err)
+        }</span>
+
+        <span class="cov0" title="0">fmt.Printf("✅ Configuration saved to: %s\n", configPath)
+        fmt.Println()
+
+        // Show next steps
+        w.showNextSteps(configPath)
+        
+        return nil</span>
+}
+
+// showNextSteps displays next steps for the user
+func (w *Wizard) showNextSteps(configPath string) <span class="cov0" title="0">{
+        fmt.Println("🎉 Setup Complete!")
+        fmt.Println("═════════════════")
+        fmt.Println()
+        
+        // Check if API token was set
+        if w.config.BeyondIdentity.APIToken == "" </span><span class="cov0" title="0">{
+                fmt.Println("⚠️  Important: Your API token is not set!")
+                fmt.Printf("   Edit %s and add your Beyond Identity API token to:\n", configPath)
+                fmt.Println("   beyond_identity.api_token: \"your-actual-token-here\"")
+                fmt.Println()
+        }</span>
+        
+        <span class="cov0" title="0">fmt.Println("Next steps:")
+        fmt.Println("1. 🔍 Validate config:   ./scim-sync validate-config")
+        fmt.Println("2. 🚀 Test sync:         ./scim-sync run")
+        fmt.Println("3. 🌐 Start server:      ./scim-sync server")
+        fmt.Println()
+        fmt.Println("📚 Documentation:")
+        fmt.Println("   - Run './scim-sync --help' for command options")
+        fmt.Println("   - Server API will be available at http://localhost:8080")
+        fmt.Println("   - Health check: curl http://localhost:8080/health")
+        fmt.Println()
+        
+        if w.config.App.TestMode </span><span class="cov0" title="0">{
+                fmt.Println("⚠️  Test mode is enabled - no actual changes will be made")
+                fmt.Println("   Set 'test_mode: false' in config when ready for production")
+        }</span>
+}
+
+// Helper methods for prompting user input
+
+func (w *Wizard) prompt(question string) string <span class="cov10" title="24">{
+        fmt.Printf("%s: ", question)
+        input, err := w.reader.ReadString('\n')
+        if err != nil </span><span class="cov0" title="0">{
+                fmt.Printf("Error reading input: %v\n", err)
+                return ""
+        }</span>
+        <span class="cov10" title="24">return strings.TrimSpace(input)</span>
+}
+
+func (w *Wizard) promptRequired(question string) string <span class="cov4" title="3">{
+        for </span><span class="cov6" title="7">{
+                value := w.prompt(question)
+                if value != "" </span><span class="cov4" title="3">{
+                        return value
+                }</span>
+                <span class="cov4" title="4">fmt.Println("⚠️  This field is required")</span>
+        }
+}
+
+func (w *Wizard) promptWithDefault(question, defaultValue string) string <span class="cov2" title="2">{
+        value := w.prompt(fmt.Sprintf("%s [%s]", question, defaultValue))
+        if value == "" </span><span class="cov1" title="1">{
+                return defaultValue
+        }</span>
+        <span class="cov1" title="1">return value</span>
+}
+
+func (w *Wizard) promptYesNo(question string, defaultValue bool) bool <span class="cov6" title="6">{
+        defaultStr := "y/N"
+        if defaultValue </span><span class="cov4" title="3">{
+                defaultStr = "Y/n"
+        }</span>
+        
+        <span class="cov6" title="6">for </span><span class="cov6" title="7">{
+                response := w.prompt(fmt.Sprintf("%s [%s]", question, defaultStr))
+                if response == "" </span><span class="cov1" title="1">{
+                        return defaultValue
+                }</span>
+                
+                <span class="cov6" title="6">response = strings.ToLower(response)
+                if response == "y" || response == "yes" </span><span class="cov4" title="3">{
+                        return true
+                }</span>
+                <span class="cov4" title="3">if response == "n" || response == "no" </span><span class="cov2" title="2">{
+                        return false
+                }</span>
+                
+                <span class="cov1" title="1">fmt.Println("⚠️  Please enter 'y' or 'n'")</span>
+        }
+}
+
+func (w *Wizard) promptIntWithDefault(question string, defaultValue int) int <span class="cov4" title="4">{
+        for </span><span class="cov5" title="5">{
+                response := w.prompt(fmt.Sprintf("%s [%d]", question, defaultValue))
+                if response == "" </span><span class="cov1" title="1">{
+                        return defaultValue
+                }</span>
+                
+                <span class="cov4" title="4">if value, err := strconv.Atoi(response); err == nil </span><span class="cov4" title="3">{
+                        return value
+                }</span>
+                
+                <span class="cov1" title="1">fmt.Println("⚠️  Please enter a valid number")</span>
+        }
+}
+
+func (w *Wizard) promptAPIToken(question string) string <span class="cov0" title="0">{
+        fmt.Printf("🔑 %s\n", question)
+        fmt.Println("💡 Choose an option:")
+        fmt.Println("   1. Paste the token directly (may have buffer issues)")
+        fmt.Println("   2. Read from file path (recommended)")
+        fmt.Println("   3. Skip and set it in config.yaml manually later")
+        fmt.Println()
+        fmt.Println("📁 Quick file option: deprecated/config.py already contains your token")
+        
+        choice := w.promptWithDefault("Enter choice (1/2/3)", "2")
+        
+        switch choice </span>{
+        case "1":<span class="cov0" title="0">
+                return w.promptTokenDirect()</span>
+        case "3":<span class="cov0" title="0">
+                fmt.Println("⏭️  Skipping API token - you'll need to set it in config.yaml manually")
+                return ""</span>
+        default:<span class="cov0" title="0">
+                return w.promptTokenFromFile()</span>
+        }
+}
+
+func (w *Wizard) promptTokenDirect() string <span class="cov0" title="0">{
+        fmt.Println("💡 Press Ctrl+C if the input gets stuck after pasting")
+        
+        for attemptCount := 0; attemptCount &lt; 3; attemptCount++ </span><span class="cov0" title="0">{
+                fmt.Print("Paste your API token: ")
+                
+                // Clear any leftover input from buffer before reading
+                w.reader.Reset(os.Stdin)
+                
+                token, err := w.reader.ReadString('\n')
+                if err != nil </span><span class="cov0" title="0">{
+                        fmt.Printf("❌ Input error: %v\n", err)
+                        if attemptCount == 2 </span><span class="cov0" title="0">{
+                                fmt.Println("💡 You can complete the wizard and edit the token in config.yaml manually")
+                                return ""
+                        }</span>
+                        <span class="cov0" title="0">continue</span>
+                }
+                
+                <span class="cov0" title="0">token = strings.TrimSpace(token)
+                if token == "" </span><span class="cov0" title="0">{
+                        fmt.Println("⚠️  API token is required (or press Ctrl+C to skip)")
+                        continue</span>
+                }
+                
+                <span class="cov0" title="0">if w.validateToken(token) </span><span class="cov0" title="0">{
+                        return token
+                }</span>
+                
+                // Clear buffer after failed validation to prevent overflow
+                <span class="cov0" title="0">w.reader.Reset(os.Stdin)</span>
+        }
+        
+        // After 3 attempts, let user proceed with empty token
+        <span class="cov0" title="0">fmt.Println("❌ Too many failed attempts. You can set the API token in config.yaml after the wizard completes.")
+        return ""</span>
+}
+
+func (w *Wizard) promptTokenFromFile() string <span class="cov0" title="0">{
+        // Suggest the Python config file first
+        pythonConfigPath := "deprecated/config.py"
+        if _, err := os.Stat(pythonConfigPath); err == nil </span><span class="cov0" title="0">{
+                if w.promptYesNo(fmt.Sprintf("Extract token from %s?", pythonConfigPath), true) </span><span class="cov0" title="0">{
+                        return w.extractTokenFromPythonConfig(pythonConfigPath)
+                }</span>
+        }
+        
+        <span class="cov0" title="0">filePath := w.promptRequired("Path to file containing API token")
+        
+        content, err := os.ReadFile(filePath)
+        if err != nil </span><span class="cov0" title="0">{
+                fmt.Printf("❌ Error reading file: %v\n", err)
+                return ""
+        }</span>
+        
+        <span class="cov0" title="0">token := strings.TrimSpace(string(content))
+        if token == "" </span><span class="cov0" title="0">{
+                fmt.Println("❌ File is empty")
+                return ""
+        }</span>
+        
+        <span class="cov0" title="0">if w.validateToken(token) </span><span class="cov0" title="0">{
+                fmt.Println("✅ Token loaded from file")
+                return token
+        }</span>
+        
+        <span class="cov0" title="0">return ""</span>
+}
+
+func (w *Wizard) extractTokenFromPythonConfig(pythonConfigPath string) string <span class="cov4" title="3">{
+        content, err := os.ReadFile(pythonConfigPath)
+        if err != nil </span><span class="cov0" title="0">{
+                fmt.Printf("❌ Error reading %s: %v\n", pythonConfigPath, err)
+                return ""
+        }</span>
+        
+        // Look for BI_TENANT_API_TOKEN = "..." pattern
+        <span class="cov4" title="3">lines := strings.Split(string(content), "\n")
+        for _, line := range lines </span><span class="cov6" title="6">{
+                line = strings.TrimSpace(line)
+                if strings.HasPrefix(line, "BI_TENANT_API_TOKEN = \"") </span><span class="cov2" title="2">{
+                        // Extract token between quotes
+                        start := strings.Index(line, "\"") + 1
+                        end := strings.LastIndex(line, "\"")
+                        if start &gt; 0 &amp;&amp; end &gt; start </span><span class="cov2" title="2">{
+                                token := line[start:end]
+                                if w.validateToken(token) </span><span class="cov1" title="1">{
+                                        fmt.Println("✅ Token extracted from Python config")
+                                        return token
+                                }</span>
+                        }
+                }
+        }
+        
+        <span class="cov2" title="2">fmt.Printf("❌ Could not find valid token in %s\n", pythonConfigPath)
+        return ""</span>
+}
+
+func (w *Wizard) validateToken(token string) bool <span class="cov6" title="7">{
+        // Basic JWT validation - should have 3 parts separated by dots
+        parts := strings.Split(token, ".")
+        if len(parts) != 3 </span><span class="cov4" title="4">{
+                fmt.Printf("⚠️  Token should be a JWT (3 parts separated by dots), got %d parts\n", len(parts))
+                fmt.Println("   Make sure you copied the complete token")
+                return false
+        }</span>
+        
+        // Check minimum length (JWTs are typically quite long)
+        <span class="cov4" title="3">if len(token) &lt; 100 </span><span class="cov1" title="1">{
+                fmt.Printf("⚠️  Token seems short (%d chars). Make sure you copied the complete token\n", len(token))
+                return false
+        }</span>
+        
+        <span class="cov2" title="2">return true</span>
+}</pre>
+		
+		</div>
+	</body>
+	<script>
+	(function() {
+		var files = document.getElementById('files');
+		var visible;
+		files.addEventListener('change', onChange, false);
+		function select(part) {
+			if (visible)
+				visible.style.display = 'none';
+			visible = document.getElementById(part);
+			if (!visible)
+				return;
+			files.value = part;
+			visible.style.display = 'block';
+			location.hash = part;
+		}
+		function onChange() {
+			select(files.value);
+			window.scrollTo(0, 0);
+		}
+		if (location.hash != "") {
+			select(location.hash.substr(1));
+		}
+		if (!visible) {
+			select("file0");
+		}
+	})();
+	</script>
+</html>

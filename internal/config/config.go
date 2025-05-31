@@ -25,24 +25,24 @@ type AppConfig struct {
 
 // GoogleWorkspaceConfig contains Google Workspace API settings
 type GoogleWorkspaceConfig struct {
-	Domain                 string `yaml:"domain"`
-	SuperAdminEmail        string `yaml:"super_admin_email"`
-	ServiceAccountKeyPath  string `yaml:"service_account_key_path"`
+	Domain                string `yaml:"domain"`
+	SuperAdminEmail       string `yaml:"super_admin_email"`
+	ServiceAccountKeyPath string `yaml:"service_account_key_path"`
 }
 
 // BeyondIdentityConfig contains Beyond Identity API settings
 type BeyondIdentityConfig struct {
-	APIToken      string `yaml:"api_token"`
-	SCIMBaseURL   string `yaml:"scim_base_url"`
-	NativeAPIURL  string `yaml:"native_api_url"`
-	GroupPrefix   string `yaml:"group_prefix"`
+	APIToken     string `yaml:"api_token"`
+	SCIMBaseURL  string `yaml:"scim_base_url"`
+	NativeAPIURL string `yaml:"native_api_url"`
+	GroupPrefix  string `yaml:"group_prefix"`
 }
 
 // SyncConfig contains synchronization settings
 type SyncConfig struct {
-	Groups             []string `yaml:"groups"`
-	RetryAttempts      int      `yaml:"retry_attempts"`
-	RetryDelaySeconds  int      `yaml:"retry_delay_seconds"`
+	Groups            []string `yaml:"groups"`
+	RetryAttempts     int      `yaml:"retry_attempts"`
+	RetryDelaySeconds int      `yaml:"retry_delay_seconds"`
 }
 
 // ServerConfig contains server mode settings
@@ -104,35 +104,35 @@ func (c *Config) SetDefaults() {
 	if c.App.LogLevel == "" {
 		c.App.LogLevel = "info"
 	}
-	
+
 	if c.BeyondIdentity.SCIMBaseURL == "" {
 		c.BeyondIdentity.SCIMBaseURL = "https://api.byndid.com/scim/v2"
 	}
-	
+
 	if c.BeyondIdentity.NativeAPIURL == "" {
 		c.BeyondIdentity.NativeAPIURL = "https://api.byndid.com/v2"
 	}
-	
+
 	if c.BeyondIdentity.GroupPrefix == "" {
 		c.BeyondIdentity.GroupPrefix = "GoogleSCIM_"
 	}
-	
+
 	if c.Sync.RetryAttempts == 0 {
 		c.Sync.RetryAttempts = 3
 	}
-	
+
 	if c.Sync.RetryDelaySeconds == 0 {
 		c.Sync.RetryDelaySeconds = 30
 	}
-	
+
 	if c.Server.Port == 0 {
 		c.Server.Port = 8080
 	}
-	
+
 	if c.Server.Schedule == "" {
 		c.Server.Schedule = "0 */6 * * *" // Every 6 hours by default
 	}
-	
+
 	if c.Sync.RetryDelaySeconds == 0 {
 		c.Sync.RetryDelaySeconds = 30
 	}

@@ -3,6 +3,7 @@ package config
 import (
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
 )
 
@@ -20,15 +21,18 @@ func TestValidate(t *testing.T) {
 					LogLevel: "info",
 				},
 				GoogleWorkspace: GoogleWorkspaceConfig{
-					Domain:                 "test.com",
-					SuperAdminEmail:        "admin@test.com",
-					ServiceAccountKeyPath:  "/tmp/test.json",
+					Domain:                "test.com",
+					SuperAdminEmail:       "admin@test.com",
+					ServiceAccountKeyPath: "/tmp/test.json",
 				},
 				BeyondIdentity: BeyondIdentityConfig{
 					APIToken: "test-token",
 				},
 				Sync: SyncConfig{
 					Groups: []string{"group1@test.com"},
+				},
+				Server: ServerConfig{
+					Port: 8080,
 				},
 			},
 			expectError: false,
@@ -56,9 +60,9 @@ func TestValidate(t *testing.T) {
 					LogLevel: "invalid",
 				},
 				GoogleWorkspace: GoogleWorkspaceConfig{
-					Domain:                 "test.com",
-					SuperAdminEmail:        "admin@test.com",
-					ServiceAccountKeyPath:  "/tmp/test.json",
+					Domain:                "test.com",
+					SuperAdminEmail:       "admin@test.com",
+					ServiceAccountKeyPath: "/tmp/test.json",
 				},
 				BeyondIdentity: BeyondIdentityConfig{
 					APIToken: "test-token",
@@ -77,9 +81,9 @@ func TestValidate(t *testing.T) {
 					LogLevel: "info",
 				},
 				GoogleWorkspace: GoogleWorkspaceConfig{
-					Domain:                 "test.com",
-					SuperAdminEmail:        "admin@test.com",
-					ServiceAccountKeyPath:  "/tmp/test.json",
+					Domain:                "test.com",
+					SuperAdminEmail:       "admin@test.com",
+					ServiceAccountKeyPath: "/tmp/test.json",
 				},
 				BeyondIdentity: BeyondIdentityConfig{
 					APIToken: "test-token",
@@ -117,7 +121,7 @@ func TestValidate(t *testing.T) {
 				// Check that expected fields are mentioned in error
 				errorStr := err.Error()
 				for _, field := range tt.errorFields {
-					if !contains([]string{errorStr}, field) {
+					if !containsField(errorStr, field) {
 						t.Errorf("Expected error to mention field '%s', but error was: %s", field, errorStr)
 					}
 				}
@@ -144,15 +148,18 @@ func TestValidateWithOptions(t *testing.T) {
 					LogLevel: "info",
 				},
 				GoogleWorkspace: GoogleWorkspaceConfig{
-					Domain:                 "test.com",
-					SuperAdminEmail:        "admin@test.com",
-					ServiceAccountKeyPath:  "/tmp/test.json",
+					Domain:                "test.com",
+					SuperAdminEmail:       "admin@test.com",
+					ServiceAccountKeyPath: "/tmp/test.json",
 				},
 				BeyondIdentity: BeyondIdentityConfig{
 					APIToken: "", // Empty token
 				},
 				Sync: SyncConfig{
 					Groups: []string{"group1@test.com"},
+				},
+				Server: ServerConfig{
+					Port: 8080,
 				},
 			},
 			options: ValidateOptions{
@@ -167,15 +174,18 @@ func TestValidateWithOptions(t *testing.T) {
 					LogLevel: "info",
 				},
 				GoogleWorkspace: GoogleWorkspaceConfig{
-					Domain:                 "test.com",
-					SuperAdminEmail:        "admin@test.com",
-					ServiceAccountKeyPath:  "/tmp/test.json",
+					Domain:                "test.com",
+					SuperAdminEmail:       "admin@test.com",
+					ServiceAccountKeyPath: "/tmp/test.json",
 				},
 				BeyondIdentity: BeyondIdentityConfig{
 					APIToken: "", // Empty token
 				},
 				Sync: SyncConfig{
 					Groups: []string{"group1@test.com"},
+				},
+				Server: ServerConfig{
+					Port: 8080,
 				},
 			},
 			options: ValidateOptions{
@@ -235,12 +245,7 @@ func TestValidationErrors(t *testing.T) {
 	}
 }
 
-// Helper function to check if a slice contains a string
-func contains(slice []string, item string) bool {
-	for _, s := range slice {
-		if s == item {
-			return true
-		}
-	}
-	return false
+// Helper function to check if an error string contains a field name
+func containsField(errorStr string, field string) bool {
+	return strings.Contains(errorStr, field)
 }
