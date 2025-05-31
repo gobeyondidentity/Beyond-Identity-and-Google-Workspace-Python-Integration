@@ -411,15 +411,15 @@ func (w *Wizard) promptAPIToken(question string) string {
 }
 
 func (w *Wizard) promptTokenDirect() string {
-	fmt.Println("💡 Press Ctrl+C if the input gets stuck after pasting")
+	fmt.Println("💡 After pasting, press Enter. If stuck, press Ctrl+C and choose option 2 (file path)")
 
 	for attemptCount := 0; attemptCount < 3; attemptCount++ {
 		fmt.Print("Paste your API token: ")
 
-		// Clear any leftover input from buffer before reading
-		w.reader.Reset(os.Stdin)
+		// Create a fresh reader to avoid buffer state issues
+		reader := bufio.NewReaderSize(os.Stdin, 8192)
 
-		token, err := w.reader.ReadString('\n')
+		token, err := reader.ReadString('\n')
 		if err != nil {
 			fmt.Printf("❌ Input error: %v\n", err)
 			if attemptCount == 2 {
@@ -439,8 +439,7 @@ func (w *Wizard) promptTokenDirect() string {
 			return token
 		}
 
-		// Clear buffer after failed validation to prevent overflow
-		w.reader.Reset(os.Stdin)
+		fmt.Println("⚠️  Invalid token format, please try again")
 	}
 
 	// After 3 attempts, let user proceed with empty token
