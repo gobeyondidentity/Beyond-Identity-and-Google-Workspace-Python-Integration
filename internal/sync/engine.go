@@ -205,6 +205,7 @@ func (e *Engine) ensureBIUser(email string, result *SyncResult) (string, error) 
 	displayName := extractDisplayName(email)
 
 	newUser := &bi.User{
+		ExternalID:  email,
 		UserName:    email,
 		DisplayName: displayName,
 		Emails: []bi.Email{

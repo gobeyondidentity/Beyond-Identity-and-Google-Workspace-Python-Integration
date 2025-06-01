@@ -20,6 +20,7 @@ type Client struct {
 // User represents a Beyond Identity SCIM user
 type User struct {
 	ID          string      `json:"id,omitempty"`
+	ExternalID  string      `json:"externalId"`
 	UserName    string      `json:"userName"`
 	DisplayName string      `json:"displayName"`
 	Emails      []Email     `json:"emails"`
