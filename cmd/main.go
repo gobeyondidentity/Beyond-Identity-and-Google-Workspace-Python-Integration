@@ -18,7 +18,7 @@ import (
 var (
 	cfgFile string
 	cfg     *config.Config
-	
+
 	// Build information (set via ldflags)
 	version = "dev"
 	commit  = "unknown"

@@ -21,17 +21,17 @@ type Client struct {
 
 // User represents a Beyond Identity SCIM user
 type User struct {
-	ID               string                 `json:"id,omitempty"`
-	ExternalID       string                 `json:"externalId"`
-	UserName         string                 `json:"userName"`
-	DisplayName      string                 `json:"displayName"`
-	Emails           []Email                `json:"emails"`
-	Active           bool                   `json:"active"`
-	HasActivePasskey bool                   `json:"hasActivePasskey,omitempty"`
-	HasPasskey       bool                   `json:"hasPasskey,omitempty"`
-	PasskeyActive    bool                   `json:"passkeyActive,omitempty"`
-	Schemas          []string               `json:"schemas"`
-	Groups           []UserGroup            `json:"groups,omitempty"`
+	ID               string      `json:"id,omitempty"`
+	ExternalID       string      `json:"externalId"`
+	UserName         string      `json:"userName"`
+	DisplayName      string      `json:"displayName"`
+	Emails           []Email     `json:"emails"`
+	Active           bool        `json:"active"`
+	HasActivePasskey bool        `json:"hasActivePasskey,omitempty"`
+	HasPasskey       bool        `json:"hasPasskey,omitempty"`
+	PasskeyActive    bool        `json:"passkeyActive,omitempty"`
+	Schemas          []string    `json:"schemas"`
+	Groups           []UserGroup `json:"groups,omitempty"`
 	// Try Beyond Identity extension schema patterns
 	BeyondIdentityExt map[string]interface{} `json:"urn:ietf:params:scim:schemas:extension:beyondidentity:2.0:User,omitempty"`
 	ByndIDExt         map[string]interface{} `json:"urn:ietf:params:scim:schemas:extension:byndid:2.0:User,omitempty"`
@@ -203,16 +203,16 @@ func (c *Client) GetUserStatus(userEmail string) (bool, error) {
 	if err != nil {
 		return false, fmt.Errorf("failed to find user by email: %w", err)
 	}
-	
+
 	if user == nil {
 		return false, nil // User doesn't exist, not enrolled
 	}
-	
+
 	// If user is not active, they're definitely not enrolled
 	if !user.Active {
 		return false, nil
 	}
-	
+
 	// Now check passkey status using Native API
 	fmt.Printf("DEBUG: About to check passkey status for %s via Native API\n", userEmail)
 	hasActivePasskey, err := c.getUserPasskeyStatus(userEmail)
@@ -222,9 +222,9 @@ func (c *Client) GetUserStatus(userEmail string) (bool, error) {
 		// Fall back to just active status for now
 		return user.Active, nil
 	}
-	
+
 	fmt.Printf("DEBUG: User %s - Active: %t, HasActivePasskey (from Native API): %t\n", userEmail, user.Active, hasActivePasskey)
-	
+
 	// User is considered enrolled only if they are both active AND have an active passkey
 	return user.Active && hasActivePasskey, nil
 }
@@ -234,17 +234,17 @@ func (c *Client) getUserPasskeyStatus(userEmail string) (bool, error) {
 	// Query the native API to get ALL users (we'll filter in code since the API works with page_size)
 	requestURL := fmt.Sprintf("%s/users?page_size=50", c.nativeAPIURL)
 	fmt.Printf("DEBUG: Querying Native API: %s\n", requestURL)
-	
+
 	resp, err := c.makeNativeAPIRequest("GET", requestURL, nil)
 	if err != nil {
 		fmt.Printf("DEBUG: Native API request failed: %v\n", err)
 		return false, fmt.Errorf("failed to query native API: %w", err)
 	}
 	defer func() { _ = resp.Body.Close() }()
-	
+
 	// Read and debug the response
 	bodyBytes, _ := io.ReadAll(resp.Body)
-	
+
 	var result struct {
 		Users []struct {
 			ID               string `json:"id"`
@@ -254,20 +254,20 @@ func (c *Client) getUserPasskeyStatus(userEmail string) (bool, error) {
 		} `json:"users"`
 		TotalSize int `json:"total_size"`
 	}
-	
+
 	if err := json.Unmarshal(bodyBytes, &result); err != nil {
 		return false, fmt.Errorf("failed to decode native API response: %w", err)
 	}
-	
+
 	// Find the user by email
 	for _, user := range result.Users {
 		if user.EmailAddress == userEmail {
-			fmt.Printf("DEBUG: Found user %s in Native API - State: %s, HasActivePasskey: %t\n", 
+			fmt.Printf("DEBUG: Found user %s in Native API - State: %s, HasActivePasskey: %t\n",
 				userEmail, user.State, user.HasActivePasskey)
 			return user.HasActivePasskey, nil
 		}
 	}
-	
+
 	fmt.Printf("DEBUG: User %s not found in Native API response\n", userEmail)
 	return false, nil // User not found in native API
 }

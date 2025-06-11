@@ -327,7 +327,7 @@ func (e *Engine) RetryWithBackoff(operation func() error, maxAttempts int, baseD
 // syncEnrollmentStatus manages the BYID_Enrolled Google group based on Beyond Identity user enrollment status (active + has active passkey)
 func (e *Engine) syncEnrollmentStatus(gwsMembers []*gws.GroupMember, result *SyncResult) error {
 	e.logger.Infof("Managing enrollment group: %s (%s)", e.config.Sync.EnrollmentGroupName, e.config.Sync.EnrollmentGroupEmail)
-	
+
 	// Ensure the enrollment group exists
 	enrollmentGroup, err := e.gwsClient.EnsureGroup(
 		e.config.Sync.EnrollmentGroupEmail,

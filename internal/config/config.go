@@ -40,11 +40,11 @@ type BeyondIdentityConfig struct {
 
 // SyncConfig contains synchronization settings
 type SyncConfig struct {
-	Groups                []string `yaml:"groups"`
-	EnrollmentGroupEmail  string   `yaml:"enrollment_group_email"`
-	EnrollmentGroupName   string   `yaml:"enrollment_group_name"`
-	RetryAttempts         int      `yaml:"retry_attempts"`
-	RetryDelaySeconds     int      `yaml:"retry_delay_seconds"`
+	Groups               []string `yaml:"groups"`
+	EnrollmentGroupEmail string   `yaml:"enrollment_group_email"`
+	EnrollmentGroupName  string   `yaml:"enrollment_group_name"`
+	RetryAttempts        int      `yaml:"retry_attempts"`
+	RetryDelaySeconds    int      `yaml:"retry_delay_seconds"`
 }
 
 // ServerConfig contains server mode settings
