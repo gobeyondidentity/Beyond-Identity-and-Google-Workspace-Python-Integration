@@ -7,17 +7,25 @@ GOCLEAN=$(GOCMD) clean
 GOTEST=$(GOCMD) test
 GOGET=$(GOCMD) get
 GOMOD=$(GOCMD) mod
+
+# Build parameters
 BINARY_NAME=scim-sync
-BINARY_PATH=./cmd/main.go
+BINARY_PATH=./cmd
+DIST_DIR=dist
+
+# Version information
+VERSION ?= $(shell git describe --tags --always --dirty 2>/dev/null || echo "dev")
+COMMIT ?= $(shell git rev-parse --short HEAD 2>/dev/null || echo "unknown")
+DATE ?= $(shell date -u +%Y-%m-%dT%H:%M:%SZ)
 
 # Build flags
-LDFLAGS=-ldflags "-s -w"
+LDFLAGS=-ldflags="-s -w -X main.version=$(VERSION) -X main.commit=$(COMMIT) -X main.date=$(DATE)"
 BUILD_FLAGS=-v $(LDFLAGS)
 
 # Test flags
 TEST_FLAGS=-v -race -coverprofile=coverage.out
 
-.PHONY: all build clean test test-coverage test-unit lint fmt vet deps deps-update help run dev
+.PHONY: all build clean dist-clean test test-coverage test-unit lint fmt vet deps deps-update help run dev build-all pre-commit validate install-tools check-tidy
 
 # Default target
 all: clean deps test build
@@ -33,6 +41,11 @@ clean:
 	$(GOCLEAN)
 	rm -f $(BINARY_NAME)
 	rm -f coverage.out
+
+# Clean distribution directory
+dist-clean:
+	@echo "Cleaning distribution directory..."
+	rm -rf $(DIST_DIR)
 
 # Run all tests
 test: test-unit
@@ -116,12 +129,13 @@ validate: fmt vet lint test check-tidy
 	@echo "All validation checks passed!"
 
 # Build for multiple platforms
-build-all:
+build-all: dist-clean
 	@echo "Building for multiple platforms..."
-	GOOS=linux GOARCH=amd64 $(GOBUILD) $(BUILD_FLAGS) -o $(BINARY_NAME)-linux-amd64 $(BINARY_PATH)
-	GOOS=darwin GOARCH=amd64 $(GOBUILD) $(BUILD_FLAGS) -o $(BINARY_NAME)-darwin-amd64 $(BINARY_PATH)
-	GOOS=darwin GOARCH=arm64 $(GOBUILD) $(BUILD_FLAGS) -o $(BINARY_NAME)-darwin-arm64 $(BINARY_PATH)
-	GOOS=windows GOARCH=amd64 $(GOBUILD) $(BUILD_FLAGS) -o $(BINARY_NAME)-windows-amd64.exe $(BINARY_PATH)
+	@mkdir -p $(DIST_DIR)
+	GOOS=linux GOARCH=amd64 $(GOBUILD) $(BUILD_FLAGS) -o $(DIST_DIR)/$(BINARY_NAME)-linux-amd64 $(BINARY_PATH)
+	GOOS=darwin GOARCH=amd64 $(GOBUILD) $(BUILD_FLAGS) -o $(DIST_DIR)/$(BINARY_NAME)-darwin-amd64 $(BINARY_PATH)
+	GOOS=darwin GOARCH=arm64 $(GOBUILD) $(BUILD_FLAGS) -o $(DIST_DIR)/$(BINARY_NAME)-darwin-arm64 $(BINARY_PATH)
+	GOOS=windows GOARCH=amd64 $(GOBUILD) $(BUILD_FLAGS) -o $(DIST_DIR)/$(BINARY_NAME)-windows-amd64.exe $(BINARY_PATH)
 
 # Pre-commit hook (runs before committing)
 pre-commit: validate
@@ -133,6 +147,7 @@ help:
 	@echo "  all           - Clean, download deps, test, and build"
 	@echo "  build         - Build the application"
 	@echo "  clean         - Clean build artifacts"
+	@echo "  dist-clean    - Clean distribution directory"
 	@echo "  test          - Run all tests"
 	@echo "  test-unit     - Run unit tests with coverage"
 	@echo "  test-coverage - Generate HTML coverage report"

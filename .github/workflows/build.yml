@@ -1,0 +1,124 @@
+name: Build and Release
+
+on:
+  push:
+    branches: [ main ]
+    tags: [ 'v*' ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        os: [linux, windows, darwin]
+        arch: [amd64, arm64]
+        exclude:
+          # Windows ARM64 builds are not commonly needed
+          - os: windows
+            arch: arm64
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Set up Go
+      uses: actions/setup-go@v4
+      with:
+        go-version: '1.21'
+    
+    - name: Get dependencies
+      run: go mod download
+    
+    - name: Set binary name
+      id: binary
+      run: |
+        if [ "${{ matrix.os }}" = "windows" ]; then
+          echo "name=scim-sync-${{ matrix.os }}-${{ matrix.arch }}.exe" >> $GITHUB_OUTPUT
+        else
+          echo "name=scim-sync-${{ matrix.os }}-${{ matrix.arch }}" >> $GITHUB_OUTPUT
+        fi
+    
+    - name: Build binary
+      run: |
+        GOOS=${{ matrix.os }} GOARCH=${{ matrix.arch }} go build \
+          -ldflags="-s -w -X main.version=${GITHUB_REF#refs/tags/} -X main.commit=${GITHUB_SHA::8} -X main.date=$(date -u +%Y-%m-%dT%H:%M:%SZ)" \
+          -o dist/${{ steps.binary.outputs.name }} \
+          ./cmd
+      env:
+        CGO_ENABLED: 0
+    
+    - name: Upload artifacts
+      uses: actions/upload-artifact@v3
+      with:
+        name: scim-sync-${{ matrix.os }}-${{ matrix.arch }}
+        path: dist/${{ steps.binary.outputs.name }}
+        retention-days: 30
+
+  release:
+    needs: build
+    runs-on: ubuntu-latest
+    if: startsWith(github.ref, 'refs/tags/')
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Download all artifacts
+      uses: actions/download-artifact@v3
+      with:
+        path: dist/
+    
+    - name: Create checksums
+      run: |
+        cd dist/
+        find . -name "scim-sync-*" -type f -exec sha256sum {} \; > checksums.txt
+    
+    - name: Create Release
+      uses: softprops/action-gh-release@v1
+      with:
+        files: |
+          dist/*/scim-sync-*
+          dist/checksums.txt
+        generate_release_notes: true
+        draft: false
+        prerelease: false
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  docker:
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/')
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v3
+    
+    - name: Log in to GitHub Container Registry
+      uses: docker/login-action@v3
+      with:
+        registry: ghcr.io
+        username: ${{ github.actor }}
+        password: ${{ secrets.GITHUB_TOKEN }}
+    
+    - name: Extract metadata
+      id: meta
+      uses: docker/metadata-action@v5
+      with:
+        images: ghcr.io/${{ github.repository }}
+        tags: |
+          type=ref,event=branch
+          type=ref,event=tag
+          type=raw,value=latest,enable={{is_default_branch}}
+    
+    - name: Build and push Docker image
+      uses: docker/build-push-action@v5
+      with:
+        context: .
+        platforms: linux/amd64,linux/arm64
+        push: true
+        tags: ${{ steps.meta.outputs.tags }}
+        labels: ${{ steps.meta.outputs.labels }}
+        cache-from: type=gha
+        cache-to: type=gha,mode=max

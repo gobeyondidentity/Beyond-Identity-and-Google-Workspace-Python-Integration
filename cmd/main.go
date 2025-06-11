@@ -18,6 +18,11 @@ import (
 var (
 	cfgFile string
 	cfg     *config.Config
+	
+	// Build information (set via ldflags)
+	version = "dev"
+	commit  = "unknown"
+	date    = "unknown"
 )
 
 // rootCmd represents the base command when called without any subcommands
@@ -108,8 +113,9 @@ var versionCmd = &cobra.Command{
 	Short: "Print version information",
 	Long:  `Print version information for scim-sync.`,
 	Run: func(cmd *cobra.Command, args []string) {
-		fmt.Println("scim-sync version 0.1.0 (MVP)")
-		fmt.Println("Built with Go")
+		fmt.Printf("scim-sync %s\n", version)
+		fmt.Printf("Commit: %s\n", commit)
+		fmt.Printf("Built: %s\n", date)
 	},
 }
 

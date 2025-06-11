@@ -1,0 +1,30 @@
+# Git
+.git
+.gitignore
+
+# Documentation
+README.md
+docs/
+deprecated/
+
+# Build artifacts
+dist/
+*.exe
+scim-sync
+
+# Configuration files (should be mounted at runtime)
+config.yaml
+config.yml
+service-account.json
+
+# Development files
+.vscode/
+.idea/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Temporary files
+*.tmp
+*.log
