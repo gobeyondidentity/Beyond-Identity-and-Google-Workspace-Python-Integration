@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"net/http"
 	"os"
+	"strings"
 
 	"golang.org/x/oauth2/google"
 	"google.golang.org/api/admin/directory/v1"
@@ -194,10 +195,86 @@ func (c *Client) GetGroupMembers(groupEmail string) ([]*GroupMember, error) {
 	return allMembers, nil
 }
 
+// AddMemberToGroup adds a user to a Google Workspace group
+func (c *Client) AddMemberToGroup(groupEmail, userEmail string) error {
+	member := &admin.Member{
+		Email: userEmail,
+		Role:  "MEMBER",
+		Type:  "USER",
+	}
+
+	_, err := c.service.Members.Insert(groupEmail, member).Do()
+	if err != nil {
+		// Check if user is already a member
+		if googleErr, ok := err.(*googleapi.Error); ok && googleErr.Code == http.StatusConflict {
+			return nil // User already in group, no error
+		}
+		return fmt.Errorf("failed to add member %s to group %s: %w", userEmail, groupEmail, err)
+	}
+
+	return nil
+}
+
+// RemoveMemberFromGroup removes a user from a Google Workspace group
+func (c *Client) RemoveMemberFromGroup(groupEmail, userEmail string) error {
+	err := c.service.Members.Delete(groupEmail, userEmail).Do()
+	if err != nil {
+		// Check if user is not a member (404 error)
+		if isNotFoundError(err) {
+			return nil // User not in group, no error
+		}
+		return fmt.Errorf("failed to remove member %s from group %s: %w", userEmail, groupEmail, err)
+	}
+
+	return nil
+}
+
+// CreateGroup creates a new Google Workspace group
+func (c *Client) CreateGroup(groupEmail, groupName, description string) (*Group, error) {
+	group := &admin.Group{
+		Email:       groupEmail,
+		Name:        groupName,
+		Description: description,
+	}
+
+	createdGroup, err := c.service.Groups.Insert(group).Do()
+	if err != nil {
+		// Check if group already exists
+		if googleErr, ok := err.(*googleapi.Error); ok && googleErr.Code == http.StatusConflict {
+			// Group exists, fetch and return it
+			return c.GetGroup(groupEmail)
+		}
+		return nil, fmt.Errorf("failed to create group %s: %w", groupEmail, err)
+	}
+
+	return &Group{
+		ID:          createdGroup.Id,
+		Email:       createdGroup.Email,
+		Name:        createdGroup.Name,
+		Description: createdGroup.Description,
+	}, nil
+}
+
+// EnsureGroup ensures a group exists, creating it if necessary
+func (c *Client) EnsureGroup(groupEmail, groupName, description string) (*Group, error) {
+	// Try to get existing group
+	group, err := c.GetGroup(groupEmail)
+	if err != nil {
+		// If not found, create it
+		if isNotFoundError(err) {
+			return c.CreateGroup(groupEmail, groupName, description)
+		}
+		return nil, fmt.Errorf("failed to check for existing group: %w", err)
+	}
+	return group, nil
+}
+
 // isNotFoundError checks if the error is a 404 not found error
 func isNotFoundError(err error) bool {
 	if googleErr, ok := err.(*googleapi.Error); ok {
 		return googleErr.Code == http.StatusNotFound
 	}
-	return false
+	// Also check for string patterns that indicate not found
+	errorStr := err.Error()
+	return strings.Contains(errorStr, "404") || strings.Contains(errorStr, "notFound") || strings.Contains(errorStr, "Resource Not Found")
 }

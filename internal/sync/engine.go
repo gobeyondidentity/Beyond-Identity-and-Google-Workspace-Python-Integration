@@ -99,6 +99,13 @@ func (e *Engine) syncGroup(groupEmail string, result *SyncResult) error {
 		return fmt.Errorf("failed to update group membership: %w", err)
 	}
 
+	// Sync enrollment status to Google Workspace
+	e.logger.Infof("Starting enrollment status sync for %d members", len(gwsMembers))
+	if err := e.syncEnrollmentStatus(gwsMembers, result); err != nil {
+		e.logger.Errorf("Failed to sync enrollment status: %v", err)
+		result.Errors = append(result.Errors, fmt.Errorf("enrollment sync: %w", err))
+	}
+
 	return nil
 }
 
@@ -118,9 +125,9 @@ func (e *Engine) ensureBIGroup(groupName, description string, result *SyncResult
 	// Create new group
 	if e.config.App.TestMode {
 		e.logger.Infof("TEST MODE: Would create group '%s' with description '%s'", groupName, description)
-		// Return a fake group for test mode
+		// Return a mock group for test mode (no actual API call made)
 		return &bi.Group{
-			ID:          "test-group-id",
+			ID:          "mock-group-id-for-testing",
 			DisplayName: groupName,
 		}, nil
 	}
@@ -196,7 +203,7 @@ func (e *Engine) ensureBIUser(email string, result *SyncResult) (string, error) 
 	// Create new user
 	if e.config.App.TestMode {
 		e.logger.Infof("TEST MODE: Would create user '%s'", email)
-		return "test-user-id", nil
+		return "mock-user-id-for-testing", nil
 	}
 
 	e.logger.Infof("Creating new user: %s", email)
@@ -315,4 +322,83 @@ func (e *Engine) RetryWithBackoff(operation func() error, maxAttempts int, baseD
 	}
 
 	return fmt.Errorf("operation failed after %d attempts: %w", maxAttempts, lastErr)
+}
+
+// syncEnrollmentStatus manages the BYID_Enrolled Google group based on Beyond Identity user enrollment status (active + has active passkey)
+func (e *Engine) syncEnrollmentStatus(gwsMembers []*gws.GroupMember, result *SyncResult) error {
+	e.logger.Infof("Managing enrollment group: %s (%s)", e.config.Sync.EnrollmentGroupName, e.config.Sync.EnrollmentGroupEmail)
+	
+	// Ensure the enrollment group exists
+	enrollmentGroup, err := e.gwsClient.EnsureGroup(
+		e.config.Sync.EnrollmentGroupEmail,
+		e.config.Sync.EnrollmentGroupName,
+		"Users who have successfully enrolled with Beyond Identity",
+	)
+	if err != nil {
+		return fmt.Errorf("failed to ensure enrollment group: %w", err)
+	}
+
+	e.logger.Debugf("Managing enrollment group: %s", enrollmentGroup.Email)
+
+	// Get current members of the enrollment group
+	currentMembers, err := e.gwsClient.GetGroupMembers(enrollmentGroup.Email)
+	if err != nil {
+		return fmt.Errorf("failed to get enrollment group members: %w", err)
+	}
+
+	// Create a map of current members for quick lookup
+	currentMemberMap := make(map[string]bool)
+	for _, member := range currentMembers {
+		currentMemberMap[member.Email] = true
+	}
+
+	// Process each user in the sync scope
+	for _, member := range gwsMembers {
+		// Skip non-user members
+		if member.Type != "USER" {
+			continue
+		}
+
+		// Skip suspended members
+		if member.Status == "SUSPENDED" {
+			continue
+		}
+
+		// Check Beyond Identity enrollment status (active AND has active passkey)
+		isEnrolled, err := e.biClient.GetUserStatus(member.Email)
+		if err != nil {
+			e.logger.Warnf("Failed to get BI enrollment status for %s: %v", member.Email, err)
+			continue
+		}
+
+		isCurrentlyInGroup := currentMemberMap[member.Email]
+
+		if isEnrolled && !isCurrentlyInGroup {
+			// User is enrolled in BI (active + has passkey) but not in enrollment group - add them
+			if e.config.App.TestMode {
+				e.logger.Infof("TEST MODE: Would add %s to enrollment group (active with passkey)", member.Email)
+			} else {
+				e.logger.Infof("Adding %s to enrollment group (active with passkey)", member.Email)
+				if err := e.gwsClient.AddMemberToGroup(enrollmentGroup.Email, member.Email); err != nil {
+					e.logger.Errorf("Failed to add %s to enrollment group: %v", member.Email, err)
+					continue
+				}
+			}
+			result.MembershipsAdded++
+		} else if !isEnrolled && isCurrentlyInGroup {
+			// User is not enrolled in BI (inactive or no passkey) but still in enrollment group - remove them
+			if e.config.App.TestMode {
+				e.logger.Infof("TEST MODE: Would remove %s from enrollment group (not enrolled or no passkey)", member.Email)
+			} else {
+				e.logger.Infof("Removing %s from enrollment group (not enrolled or no passkey)", member.Email)
+				if err := e.gwsClient.RemoveMemberFromGroup(enrollmentGroup.Email, member.Email); err != nil {
+					e.logger.Errorf("Failed to remove %s from enrollment group: %v", member.Email, err)
+					continue
+				}
+			}
+			result.MembershipsRemoved++
+		}
+	}
+
+	return nil
 }

@@ -73,7 +73,7 @@ func NewServer(cfg *config.Config, logger *logrus.Logger) (*Server, error) {
 	}
 
 	// Create Beyond Identity client
-	biClient := bi.NewClient(cfg.BeyondIdentity.APIToken, cfg.BeyondIdentity.SCIMBaseURL)
+	biClient := bi.NewClient(cfg.BeyondIdentity.APIToken, cfg.BeyondIdentity.SCIMBaseURL, cfg.BeyondIdentity.NativeAPIURL)
 
 	// Create sync engine
 	syncEngine := syncengine.NewEngine(gwsClient, biClient, cfg, logger)

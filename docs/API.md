@@ -1,6 +1,6 @@
 # Go SCIM Sync API Reference
 
-When running in server mode (`./scim-sync server`), the application provides an HTTP API for management and monitoring.
+When running in server mode (`./scim-sync server`), the application provides an HTTP API for management and monitoring of bi-directional sync operations.
 
 ## Base URL
 
@@ -39,7 +39,7 @@ Returns server health status and next scheduled sync time.
 POST /sync
 ```
 
-Triggers a manual synchronization operation.
+Triggers a manual bi-directional synchronization operation.
 
 **Response Example:**
 ```json
@@ -59,6 +59,10 @@ Triggers a manual synchronization operation.
   }
 }
 ```
+
+**Note:** This endpoint performs both:
+- **GWS → BI Sync:** Creates/updates users and groups in Beyond Identity
+- **BI → GWS Sync:** Manages enrollment group membership based on Beyond Identity user activation status
 
 ### Metrics
 ```http
@@ -190,6 +194,8 @@ Key metrics to monitor:
 - `last_sync_time` - When the last sync occurred
 - `failed_syncs` - Number of failed synchronizations
 - `average_sync_duration` - Performance trending
+- `total_memberships_added` - Includes both BI group and enrollment group additions
+- `total_memberships_removed` - Includes enrollment group removals for inactive users
 
 ## Rate Limiting
 

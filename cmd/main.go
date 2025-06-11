@@ -188,7 +188,7 @@ func runSync() error {
 	}
 
 	// Create Beyond Identity client
-	biClient := bi.NewClient(cfg.BeyondIdentity.APIToken, cfg.BeyondIdentity.SCIMBaseURL)
+	biClient := bi.NewClient(cfg.BeyondIdentity.APIToken, cfg.BeyondIdentity.SCIMBaseURL, cfg.BeyondIdentity.NativeAPIURL)
 
 	// Create sync engine
 	engine := sync.NewEngine(gwsClient, biClient, cfg, log)

@@ -1,5 +1,5 @@
 # Go SCIM Sync Configuration File
-# This is an example configuration for syncing users from Google Workspace to Beyond Identity
+# This is an example configuration for bi-directional sync between Google Workspace and Beyond Identity
 
 # Application settings
 app:
@@ -24,6 +24,8 @@ sync:
   groups:                                      # List of Google Workspace groups to sync
     - "scim_test@byndid-mail.com"
     - "engineering@byndid-mail.com"
+  enrollment_group_email: "byid-enrolled@byndid-mail.com"  # Google group for BI enrolled users (optional)
+  enrollment_group_name: "BYID Enrolled"                   # Display name for enrollment group (optional)
   retry_attempts: 3                            # Number of retry attempts for failed operations
   retry_delay_seconds: 30                      # Delay between retry attempts
 
@@ -34,3 +36,9 @@ sync:
 # 4. Ensure your service account JSON file is in the correct location
 # 5. Run: scim-sync validate-config to test your configuration
 # 6. Run: scim-sync run to start synchronization
+#
+# Bi-directional Sync:
+# - GWS → BI: Creates users/groups in Beyond Identity based on Google Workspace groups
+# - BI → GWS: Manages enrollment group membership based on Beyond Identity user activation status
+# - Users who activate in BI are automatically added to the enrollment_group_email
+# - Users who become inactive in BI are automatically removed from the enrollment group

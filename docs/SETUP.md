@@ -13,7 +13,7 @@ This will guide you through:
 - Application configuration (log level, test mode)
 - Google Workspace setup (domain, admin email, service account)
 - Beyond Identity configuration (API token, endpoints)
-- Sync settings (groups to sync, retry configuration)
+- Sync settings (groups to sync, enrollment group configuration, retry settings)
 - Server mode settings (port, scheduling)
 
 ### 2. Configure API Token
@@ -68,6 +68,8 @@ sync:
   groups:
     - "engineering@yourcompany.com"
     - "sales@yourcompany.com"
+  enrollment_group_email: "byid-enrolled@yourcompany.com"  # Optional: Google group for BI enrolled users
+  enrollment_group_name: "BYID Enrolled"                   # Optional: Display name for enrollment group
   retry_attempts: 3
   retry_delay_seconds: 30
 
@@ -146,6 +148,47 @@ server:
    - Use server mode for monitoring and metrics
    - Set up alerts for sync failures
    - Monitor API rate limits
+
+## Bi-directional Sync Configuration
+
+The application supports bi-directional synchronization:
+
+### GWS → BI Sync (Standard)
+- Creates users and groups in Beyond Identity
+- Syncs group memberships from Google Workspace
+- Handles user lifecycle (creation, updates)
+
+### BI → GWS Sync (Enrollment Status)
+- Monitors Beyond Identity user activation status
+- Automatically manages enrollment group membership in Google Workspace
+- Adds users to enrollment group when they activate in Beyond Identity
+- Removes users from enrollment group when they become inactive
+
+### Enrollment Group Configuration
+
+The enrollment group settings are optional. If not configured, defaults will be used:
+
+```yaml
+sync:
+  enrollment_group_email: "byid-enrolled@yourcompany.com"
+  enrollment_group_name: "BYID Enrolled"
+```
+
+**Default behavior:**
+- If `enrollment_group_email` is not specified, it defaults to `byid-enrolled@{domain}`
+- If `enrollment_group_name` is not specified, it defaults to `"BYID Enrolled"`
+- The enrollment group will be created automatically if it doesn't exist
+
+### Enrollment Sync Process
+
+During each sync operation:
+
+1. **Check User Status**: Query Beyond Identity for activation status of all users in sync scope
+2. **Compare States**: Compare BI status with current enrollment group membership
+3. **Update Membership**: 
+   - Add newly activated users to enrollment group
+   - Remove deactivated users from enrollment group
+4. **Logging**: All enrollment changes are logged for audit purposes
 
 ## Common Configurations
 

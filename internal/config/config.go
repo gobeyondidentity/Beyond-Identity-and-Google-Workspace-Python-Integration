@@ -40,9 +40,11 @@ type BeyondIdentityConfig struct {
 
 // SyncConfig contains synchronization settings
 type SyncConfig struct {
-	Groups            []string `yaml:"groups"`
-	RetryAttempts     int      `yaml:"retry_attempts"`
-	RetryDelaySeconds int      `yaml:"retry_delay_seconds"`
+	Groups                []string `yaml:"groups"`
+	EnrollmentGroupEmail  string   `yaml:"enrollment_group_email"`
+	EnrollmentGroupName   string   `yaml:"enrollment_group_name"`
+	RetryAttempts         int      `yaml:"retry_attempts"`
+	RetryDelaySeconds     int      `yaml:"retry_delay_seconds"`
 }
 
 // ServerConfig contains server mode settings
@@ -135,5 +137,13 @@ func (c *Config) SetDefaults() {
 
 	if c.Sync.RetryDelaySeconds == 0 {
 		c.Sync.RetryDelaySeconds = 30
+	}
+
+	if c.Sync.EnrollmentGroupEmail == "" {
+		c.Sync.EnrollmentGroupEmail = "byid-enrolled@" + c.GoogleWorkspace.Domain
+	}
+
+	if c.Sync.EnrollmentGroupName == "" {
+		c.Sync.EnrollmentGroupName = "BYID Enrolled"
 	}
 }

@@ -1,12 +1,14 @@
-# Google Workspace to Beyond Identity SCIM Sync
+# Google Workspace ↔ Beyond Identity Bi-directional Sync
 
-A high-performance Go application for synchronizing users and groups from Google Workspace to Beyond Identity using SCIM protocol.
+A high-performance Go application for bi-directional synchronization between Google Workspace and Beyond Identity using SCIM protocol.
 
 > 🆕 **Go Implementation Now Primary** - The Python version has been moved to `deprecated/` folder. This Go implementation provides better performance, enhanced features, and production-ready capabilities.
 
 ## ✨ Key Features
 
+✅ **Bi-directional Sync** - GWS → BI provisioning + BI → GWS enrollment status management  
 ✅ **Complete SCIM Synchronization** - Full user and group sync with membership management  
+✅ **Enrollment Group Management** - Automatic Google group updates based on BI activation status  
 ✅ **Interactive Setup Wizard** - Guided configuration with validation  
 ✅ **Server Mode** - HTTP API with automatic scheduling  
 ✅ **Comprehensive Validation** - Connectivity testing and error reporting  
@@ -87,6 +89,7 @@ beyond_identity:
 sync:
   groups:
     - "group1@your-domain.com"
+  enrollment_group_email: "byid-enrolled@your-domain.com"  # Optional: Auto-managed enrollment group
 ```
 
 ### API Token Configuration
@@ -100,6 +103,34 @@ The application searches for configuration files in this order:
 2. `./config.yml`
 3. `~/.config/scim-sync/config.yaml`
 4. `~/.config/scim-sync/config.yml`
+
+## 🔄 Bi-directional Sync
+
+The application performs synchronization in both directions:
+
+### GWS → BI Sync (Provisioning)
+- **Users**: Creates/updates user accounts in Beyond Identity
+- **Groups**: Creates groups with configured prefix (e.g., `GoogleSCIM_Engineering`)
+- **Memberships**: Syncs group membership from Google Workspace to Beyond Identity
+- **Lifecycle**: Handles user activation, deactivation, and updates
+
+### BI → GWS Sync (Enrollment Status)
+- **Status Monitoring**: Checks Beyond Identity user activation status via SCIM API
+- **Enrollment Group**: Automatically manages a Google Workspace group for enrolled users
+- **Real-time Updates**: 
+  - Users who **activate** in BI → **Added** to enrollment group
+  - Users who **deactivate** in BI → **Removed** from enrollment group
+- **Audit Trail**: All enrollment changes are logged for compliance
+
+### Enrollment Group Configuration
+
+```yaml
+sync:
+  enrollment_group_email: "byid-enrolled@your-domain.com"  # Default: byid-enrolled@{domain}
+  enrollment_group_name: "BYID Enrolled"                   # Default: "BYID Enrolled"
+```
+
+The enrollment group is automatically created if it doesn't exist. Users in the configured `sync.groups` are monitored for Beyond Identity activation status changes.
 
 ## 🎯 Implementation Status
 
