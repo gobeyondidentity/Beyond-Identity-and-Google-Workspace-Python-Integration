@@ -172,6 +172,26 @@ func (m *mockBIClient) GetUserStatus(userEmail string) (bool, error) {
 	return true, nil
 }
 
+func (m *mockBIClient) GetGroupWithMembers(groupID string) (*bi.Group, error) {
+	if m.shouldError {
+		return nil, errors.New("mock BI get group error")
+	}
+	
+	// Find the group by ID
+	for _, group := range m.groups {
+		if group.ID == groupID {
+			// Return a copy with empty members for simplicity in tests
+			return &bi.Group{
+				ID:          group.ID,
+				DisplayName: group.DisplayName,
+				Members:     []bi.GroupMember{}, // Start with empty for test simplicity
+			}, nil
+		}
+	}
+	
+	return nil, fmt.Errorf("group not found: %s", groupID)
+}
+
 func TestNewEngine(t *testing.T) {
 	gwsClient := &mockGWSClient{}
 	biClient := &mockBIClient{}

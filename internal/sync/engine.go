@@ -237,33 +237,70 @@ func (e *Engine) ensureBIUser(email string, result *SyncResult) (string, error) 
 }
 
 // updateGroupMembership updates the membership of a Beyond Identity group
-func (e *Engine) updateGroupMembership(groupID string, userIDs []string, result *SyncResult) error {
+func (e *Engine) updateGroupMembership(groupID string, desiredUserIDs []string, result *SyncResult) error {
 	if e.config.App.TestMode {
-		e.logger.Infof("TEST MODE: Would update group %s with %d members", groupID, len(userIDs))
+		e.logger.Infof("TEST MODE: Would update group %s with %d members", groupID, len(desiredUserIDs))
 		return nil
 	}
 
-	// Convert user IDs to group members
-	var newMembers []bi.GroupMember
-	for _, userID := range userIDs {
-		newMembers = append(newMembers, bi.GroupMember{
-			Value: userID,
-		})
+	// Get current group members from BI to calculate what needs to change
+	e.logger.Debugf("Getting current members for group %s", groupID)
+	currentGroup, err := e.biClient.GetGroupWithMembers(groupID)
+	if err != nil {
+		return fmt.Errorf("failed to get current group members: %w", err)
 	}
 
-	// For simplicity, we'll replace all members (remove all, then add all)
-	// In a production system, you might want to be more surgical about this
-	e.logger.Infof("Updating group membership for group %s with %d members", groupID, len(newMembers))
+	// Create sets for easier comparison
+	currentMemberIDs := make(map[string]bool)
+	for _, member := range currentGroup.Members {
+		currentMemberIDs[member.Value] = true
+	}
 
-	// Note: This is a simplified approach. A more sophisticated implementation
-	// would compare existing members and only add/remove the differences.
-	err := e.biClient.UpdateGroupMembers(groupID, newMembers, []bi.GroupMember{})
+	desiredMemberIDs := make(map[string]bool)
+	for _, userID := range desiredUserIDs {
+		desiredMemberIDs[userID] = true
+	}
+
+	// Calculate members to add (in desired but not in current)
+	var membersToAdd []bi.GroupMember
+	for userID := range desiredMemberIDs {
+		if !currentMemberIDs[userID] {
+			membersToAdd = append(membersToAdd, bi.GroupMember{
+				Value: userID,
+			})
+		}
+	}
+
+	// Calculate members to remove (in current but not in desired)
+	var membersToRemove []bi.GroupMember
+	for _, member := range currentGroup.Members {
+		if !desiredMemberIDs[member.Value] {
+			membersToRemove = append(membersToRemove, bi.GroupMember{
+				Value: member.Value,
+			})
+		}
+	}
+
+	// Only make API call if there are changes needed
+	if len(membersToAdd) == 0 && len(membersToRemove) == 0 {
+		e.logger.Infof("Group %s membership is already up to date (%d members)", groupID, len(currentGroup.Members))
+		return nil
+	}
+
+	e.logger.Infof("Updating group membership for group %s: +%d members, -%d members", 
+		groupID, len(membersToAdd), len(membersToRemove))
+
+	// Update group membership with proper add/remove operations
+	err = e.biClient.UpdateGroupMembers(groupID, membersToAdd, membersToRemove)
 	if err != nil {
 		return fmt.Errorf("failed to update group members: %w", err)
 	}
 
-	result.MembershipsAdded += len(newMembers)
-	e.logger.Infof("Updated group membership: added %d members", len(newMembers))
+	result.MembershipsAdded += len(membersToAdd)
+	result.MembershipsRemoved += len(membersToRemove)
+	
+	e.logger.Infof("Successfully updated group membership: added %d, removed %d members", 
+		len(membersToAdd), len(membersToRemove))
 
 	return nil
 }

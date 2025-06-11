@@ -22,4 +22,5 @@ type BIClient interface {
 	CreateUser(user *bi.User) (*bi.User, error)
 	UpdateGroupMembers(groupID string, membersToAdd []bi.GroupMember, membersToRemove []bi.GroupMember) error
 	GetUserStatus(userEmail string) (bool, error)
+	GetGroupWithMembers(groupID string) (*bi.Group, error)
 }

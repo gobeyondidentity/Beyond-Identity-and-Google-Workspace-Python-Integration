@@ -389,6 +389,24 @@ func (c *Client) FindGroupByDisplayName(displayName string) (*Group, error) {
 	return &searchResult.Resources[0], nil
 }
 
+// GetGroupWithMembers retrieves a group by ID including its members
+func (c *Client) GetGroupWithMembers(groupID string) (*Group, error) {
+	requestURL := fmt.Sprintf("%s/Groups/%s", c.scimBaseURL, groupID)
+
+	resp, err := c.makeRequest("GET", requestURL, nil)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get group: %w", err)
+	}
+	defer func() { _ = resp.Body.Close() }()
+
+	var group Group
+	if err := json.NewDecoder(resp.Body).Decode(&group); err != nil {
+		return nil, fmt.Errorf("failed to decode group: %w", err)
+	}
+
+	return &group, nil
+}
+
 // UpdateGroupMembers updates group membership using PATCH operations
 func (c *Client) UpdateGroupMembers(groupID string, addMembers, removeMembers []GroupMember) error {
 	var operations []PatchOperation
