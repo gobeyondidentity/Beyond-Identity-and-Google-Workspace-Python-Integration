@@ -143,7 +143,7 @@ server:
    - Add new API client with:
      - Client ID: (from service account)
      - OAuth Scopes: 
-       - ` + "`https://www.googleapis.com/auth/admin.directory.user`" + `
+       - ` + "`https://www.googleapis.com/auth/admin.directory.user.readonly`" + `
        - ` + "`https://www.googleapis.com/auth/admin.directory.group`" + `
        - ` + "`https://www.googleapis.com/auth/admin.directory.group.member`" + `
 
