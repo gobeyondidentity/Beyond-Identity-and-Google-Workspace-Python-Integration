@@ -75,7 +75,7 @@ func NewClient(serviceAccountKeyPath, domain, superAdminEmail string) (*Client, 
 	// Create JWT config for domain-wide delegation
 	config, err := google.JWTConfigFromJSON(
 		credentialsJSON,
-		admin.AdminDirectoryUserScope,
+		admin.AdminDirectoryUserReadonlyScope,
 		admin.AdminDirectoryGroupScope,
 		admin.AdminDirectoryGroupMemberScope,
 	)
